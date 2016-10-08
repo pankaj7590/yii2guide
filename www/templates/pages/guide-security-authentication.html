@@ -1,0 +1,182 @@
+
+        <h1>Authentication <span id="authentication"></span><a href="#authentication" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#configuring-user">Configuring yii\web\User</a></li>
+<li><a href="#implementing-identity">Implementing yii\web\IdentityInterface</a></li>
+<li><a href="#using-user">Using yii\web\User</a></li>
+<li><a href="#auth-events">Authentication Events</a></li></ol></div>
+<p>Authentication is the process of verifying the identity of a user. It usually uses an identifier 
+(e.g. a username or an email address) and a secret token (e.g. a password or an access token) to judge 
+if the user is the one whom he claims as. Authentication is the basis of the login feature.</p>
+<p>Yii provides an authentication framework which wires up various components to support login. To use this framework, 
+you mainly need to do the following work:</p>
+<ul>
+<li>Configure the <a href="yii-web-user.html">user</a> application component;</li>
+<li>Create a class that implements the <a href="yii-web-identityinterface.html">yii\web\IdentityInterface</a> interface.</li>
+</ul>
+<h2>Configuring <a href="yii-web-user.html">yii\web\User</a>  <span id="configuring-user"></span><a href="#configuring-user" class="hashlink">&para;</a></h2><p>The <a href="yii-web-user.html">user</a> application component manages the user authentication status. It requires you to 
+specify an <a href="yii-web-user.html#$identityClass-detail">identity class</a> which contains the actual authentication logic.
+In the following application configuration, the <a href="yii-web-user.html#$identityClass-detail">identity class</a> for
+<a href="yii-web-user.html">user</a> is configured to be <code>app\models\User</code> whose implementation is explained in 
+the next subsection:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'user'</span> =&gt; [
+            <span class="hljs-string">'identityClass'</span> =&gt; <span class="hljs-string">'app\models\User'</span>,
+        ],
+    ],
+];
+</code></pre>
+<h2>Implementing <a href="yii-web-identityinterface.html">yii\web\IdentityInterface</a>  <span id="implementing-identity"></span><a href="#implementing-identity" class="hashlink">&para;</a></h2><p>The <a href="yii-web-user.html#$identityClass-detail">identity class</a> must implement the <a href="yii-web-identityinterface.html">yii\web\IdentityInterface</a> which contains
+the following methods:</p>
+<ul>
+<li><a href="yii-web-identityinterface.html#findIdentity()-detail">findIdentity()</a>: it looks for an instance of the identity
+class using the specified user ID. This method is used when you need to maintain the login status via session.</li>
+<li><a href="yii-web-identityinterface.html#findIdentityByAccessToken()-detail">findIdentityByAccessToken()</a>: it looks for
+an instance of the identity class using the specified access token. This method is used when you need
+to authenticate a user by a single secret token (e.g. in a stateless RESTful application).</li>
+<li><a href="yii-web-identityinterface.html#getId()-detail">getId()</a>: it returns the ID of the user represented by this identity instance.</li>
+<li><a href="yii-web-identityinterface.html#getAuthKey()-detail">getAuthKey()</a>: it returns a key used to verify cookie-based login.
+The key is stored in the login cookie and will be later compared with the server-side version to make
+sure the login cookie is valid.</li>
+<li><a href="yii-web-identityinterface.html#validateAuthKey()-detail">validateAuthKey()</a>: it implements the logic for verifying
+the cookie-based login key.</li>
+</ul>
+<p>If a particular method is not needed, you may implement it with an empty body. For example, if your application 
+is a pure stateless RESTful application, you would only need to implement <a href="yii-web-identityinterface.html#findIdentityByAccessToken()-detail">findIdentityByAccessToken()</a>
+and <a href="yii-web-identityinterface.html#getId()-detail">getId()</a> while leaving all other methods with an empty body.</p>
+<p>In the following example, an <a href="yii-web-user.html#$identityClass-detail">identity class</a> is implemented as 
+an <a href="guide-db-active-record.html">Active Record</a> class associated with the <code>user</code> database table.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">db</span>\<span class="hljs-title">ActiveRecord</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">IdentityInterface</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ActiveRecord</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IdentityInterface</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">tableName</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-string">'user'</span>;
+    }
+
+    <span class="hljs-comment">/**
+     * Finds an identity by the given ID.
+     *
+     * <span class="hljs-doctag">@param</span> string|integer $id the ID to be looked for
+     * <span class="hljs-doctag">@return</span> IdentityInterface|null the identity object that matches the given ID.
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">findIdentity</span><span class="hljs-params">(<span class="hljs-variable">$id</span>)</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">static</span>::findOne(<span class="hljs-variable">$id</span>);
+    }
+
+    <span class="hljs-comment">/**
+     * Finds an identity by the given token.
+     *
+     * <span class="hljs-doctag">@param</span> string $token the token to be looked for
+     * <span class="hljs-doctag">@return</span> IdentityInterface|null the identity object that matches the given token.
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">findIdentityByAccessToken</span><span class="hljs-params">(<span class="hljs-variable">$token</span>, <span class="hljs-variable">$type</span> = null)</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">static</span>::findOne([<span class="hljs-string">'access_token'</span> =&gt; <span class="hljs-variable">$token</span>]);
+    }
+
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@return</span> int|string current user ID
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getId</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;id;
+    }
+
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@return</span> string current user auth key
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAuthKey</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;auth_key;
+    }
+
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@param</span> string $authKey
+     * <span class="hljs-doctag">@return</span> boolean if auth key is valid for current user
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">validateAuthKey</span><span class="hljs-params">(<span class="hljs-variable">$authKey</span>)</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;getAuthKey() === <span class="hljs-variable">$authKey</span>;
+    }
+}
+</code></pre>
+<p>As explained previously, you only need to implement <code>getAuthKey()</code> and <code>validateAuthKey()</code> if your application
+uses cookie-based login feature. In this case, you may use the following code to generate an auth key for each
+user and store it in the <code>user</code> table:</p>
+<pre><code class="hljs php language-php"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ActiveRecord</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IdentityInterface</span>
+</span>{
+    ......
+    
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">beforeSave</span><span class="hljs-params">(<span class="hljs-variable">$insert</span>)</span>
+    </span>{
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">parent</span>::beforeSave(<span class="hljs-variable">$insert</span>)) {
+            <span class="hljs-keyword">if</span> (<span class="hljs-variable">$this</span>-&gt;isNewRecord) {
+                <span class="hljs-variable">$this</span>-&gt;auth_key = \Yii::<span class="hljs-variable">$app</span>-&gt;security-&gt;generateRandomString();
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+    }
+}
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>Do not confuse the <code>User</code> identity class with <a href="yii-web-user.html">yii\web\User</a>. The former is the class implementing
+  the authentication logic. It is often implemented as an <a href="guide-db-active-record.html">Active Record</a> class associated
+  with some persistent storage for storing the user credential information. The latter is an application component
+  class responsible for managing the user authentication state.</p>
+</blockquote>
+<h2>Using <a href="yii-web-user.html">yii\web\User</a>  <span id="using-user"></span><a href="#using-user" class="hashlink">&para;</a></h2><p>You mainly use <a href="yii-web-user.html">yii\web\User</a> in terms of the <code>user</code> application component. </p>
+<p>You can detect the identity of the current user using the expression <code>Yii::$app-&gt;user-&gt;identity</code>. It returns
+an instance of the <a href="yii-web-user.html#$identityClass-detail">identity class</a> representing the currently logged-in user,
+or <code>null</code> if the current user is not authenticated (meaning a guest). The following code shows how to retrieve
+other authentication-related information from <a href="yii-web-user.html">yii\web\User</a>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// the current user identity. `null` if the user is not authenticated.</span>
+<span class="hljs-variable">$identity</span> = Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;identity;
+
+<span class="hljs-comment">// the ID of the current user. `null` if the user not authenticated.</span>
+<span class="hljs-variable">$id</span> = Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;id;
+
+<span class="hljs-comment">// whether the current user is a guest (not authenticated)</span>
+<span class="hljs-variable">$isGuest</span> = Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;isGuest;
+</code></pre>
+<p>To login a user, you may use the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// find a user identity with the specified username.</span>
+<span class="hljs-comment">// note that you may want to check the password if needed</span>
+<span class="hljs-variable">$identity</span> = User::findOne([<span class="hljs-string">'username'</span> =&gt; <span class="hljs-variable">$username</span>]);
+
+<span class="hljs-comment">// logs in the user </span>
+Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;login(<span class="hljs-variable">$identity</span>);
+</code></pre>
+<p>The <a href="yii-web-user.html#login()-detail">yii\web\User::login()</a> method sets the identity of the current user to the <a href="yii-web-user.html">yii\web\User</a>. If session is 
+<a href="yii-web-user.html#$enableSession-detail">enabled</a>, it will keep the identity in the session so that the user
+authentication status is maintained throughout the whole session. If cookie-based login (i.e. "remember me" login)
+is <a href="yii-web-user.html#$enableAutoLogin-detail">enabled</a>, it will also save the identity in a cookie so that
+the user authentication status can be recovered from the cookie as long as the cookie remains valid.</p>
+<p>In order to enable cookie-based login, you need to configure <a href="yii-web-user.html#$enableAutoLogin-detail">yii\web\User::$enableAutoLogin</a> to be
+<code>true</code> in the application configuration. You also need to provide a duration time parameter when calling 
+the <a href="yii-web-user.html#login()-detail">yii\web\User::login()</a> method. </p>
+<p>To logout a user, simply call</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;logout();
+</code></pre>
+<p>Note that logging out a user is only meaningful when session is enabled. The method will clean up
+the user authentication status from both memory and session. And by default, it will also destroy <em>all</em>
+user session data. If you want to keep the session data, you should call <code>Yii::$app-&gt;user-&gt;logout(false)</code>, instead.</p>
+<h2>Authentication Events  <span id="auth-events"></span><a href="#auth-events" class="hashlink">&para;</a></h2><p>The <a href="yii-web-user.html">yii\web\User</a> class raises a few events during the login and logout processes. </p>
+<ul>
+<li><a href="yii-web-user.html#EVENT_BEFORE_LOGIN-detail">EVENT_BEFORE_LOGIN</a>: raised at the beginning of <a href="yii-web-user.html#login()-detail">yii\web\User::login()</a>.
+If the event handler sets the <a href="yii-web-userevent.html#$isValid-detail">isValid</a> property of the event object to be <code>false</code>,
+the login process will be cancelled. </li>
+<li><a href="yii-web-user.html#EVENT_AFTER_LOGIN-detail">EVENT_AFTER_LOGIN</a>: raised after a successful login.</li>
+<li><a href="yii-web-user.html#EVENT_BEFORE_LOGOUT-detail">EVENT_BEFORE_LOGOUT</a>: raised at the beginning of <a href="yii-web-user.html#logout()-detail">yii\web\User::logout()</a>.
+If the event handler sets the <a href="yii-web-userevent.html#$isValid-detail">isValid</a> property of the event object to be <code>false</code>,
+the logout process will be cancelled. </li>
+<li><a href="yii-web-user.html#EVENT_AFTER_LOGOUT-detail">EVENT_AFTER_LOGOUT</a>: raised after a successful logout.</li>
+</ul>
+<p>You may respond to these events to implement features such as login audit, online user statistics. For example,
+in the handler for <a href="yii-web-user.html#EVENT_AFTER_LOGIN-detail">EVENT_AFTER_LOGIN</a>, you may record the login time and IP
+address in the <code>user</code> table.</p>

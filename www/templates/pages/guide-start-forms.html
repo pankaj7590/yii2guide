@@ -1,0 +1,189 @@
+
+        <h1>Working with Forms <span id="working-with-forms"></span><a href="#working-with-forms" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#creating-model">Creating a Model</a></li>
+<li><a href="#creating-action">Creating an Action</a></li>
+<li><a href="#creating-views">Creating Views</a></li>
+<li><a href="#trying-it-out">Trying it Out</a></li>
+<li><a href="#summary">Summary</a></li></ol></div>
+<p>This section describes how to create a new page with a form for getting data from users.
+The page will display a form with a name input field and an email input field.
+After getting those two pieces of information from the user, the page will echo the entered values back for confirmation.</p>
+<p>To achieve this goal, besides creating an <a href="guide-structure-controllers.html">action</a> and
+two <a href="guide-structure-views.html">views</a>, you will also create a <a href="guide-structure-models.html">model</a>.</p>
+<p>Through this tutorial, you will learn how to:</p>
+<ul>
+<li>create a <a href="guide-structure-models.html">model</a> to represent the data entered by a user through a form,</li>
+<li>declare rules to validate the data entered,</li>
+<li>build an HTML form in a <a href="guide-structure-views.html">view</a>.</li>
+</ul>
+<h2>Creating a Model  <span id="creating-model"></span><a href="#creating-model" class="hashlink">&para;</a></h2><p>The data to be requested from the user will be represented by an <code>EntryForm</code> model class as shown below and
+saved in the file <code>models/EntryForm.php</code>. Please refer to the <a href="guide-concept-autoloading.html">Class Autoloading</a>
+section for more details about the class file naming convention.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">Yii</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EntryForm</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Model</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$name</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$email</span>;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [
+            [[<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'required'</span>],
+            [<span class="hljs-string">'email'</span>, <span class="hljs-string">'email'</span>],
+        ];
+    }
+}
+</code></pre>
+<p>The class extends from <a href="yii-base-model.html">yii\base\Model</a>, a base class provided by Yii, commonly used to
+represent form data.</p>
+<blockquote class="info"><p><strong>Info: </strong><a href="yii-base-model.html">yii\base\Model</a> is used as a parent for model classes <em>not</em> associated with database tables.
+<a href="yii-db-activerecord.html">yii\db\ActiveRecord</a> is normally the parent for model classes that do correspond to database tables.</p>
+</blockquote>
+<p>The <code>EntryForm</code> class contains two public members, <code>name</code> and <code>email</code>, which are used to store
+the data entered by the user. It also contains a method named <code>rules()</code>, which returns a set
+of rules for validating the data. The validation rules declared above state that</p>
+<ul>
+<li>both the <code>name</code> and <code>email</code> values are required</li>
+<li>the <code>email</code> data must be a syntactically valid email address</li>
+</ul>
+<p>If you have an <code>EntryForm</code> object populated with the data entered by a user, you may call
+its <a href="yii-base-model.html#validate()-detail">validate()</a> to trigger the data validation routines. A data validation
+failure will set the <a href="yii-base-model.html#hasErrors()-detail">hasErrors</a> property to <code>true</code>, and you may learn what validation
+errors occurred through <a href="yii-base-model.html#getErrors()-detail">errors</a>.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-variable">$model</span> = <span class="hljs-keyword">new</span> EntryForm();
+<span class="hljs-variable">$model</span>-&gt;name = <span class="hljs-string">'Qiang'</span>;
+<span class="hljs-variable">$model</span>-&gt;email = <span class="hljs-string">'bad'</span>;
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$model</span>-&gt;validate()) {
+    <span class="hljs-comment">// Good!</span>
+} <span class="hljs-keyword">else</span> {
+    <span class="hljs-comment">// Failure!</span>
+    <span class="hljs-comment">// Use $model-&gt;getErrors()</span>
+}
+</code></pre>
+<h2>Creating an Action  <span id="creating-action"></span><a href="#creating-action" class="hashlink">&para;</a></h2><p>Next, you'll need to create an <code>entry</code> action in the <code>site</code> controller that will use the new model. The process
+of creating and using actions was explained in the <a href="guide-start-hello.html">Saying Hello</a> section.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">controllers</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">Yii</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">Controller</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">EntryForm</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SiteController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-comment">// ...existing code...</span>
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionEntry</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-variable">$model</span> = <span class="hljs-keyword">new</span> EntryForm();
+
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$model</span>-&gt;load(Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post()) &amp;&amp; <span class="hljs-variable">$model</span>-&gt;validate()) {
+            <span class="hljs-comment">// valid data received in $model</span>
+
+            <span class="hljs-comment">// do something meaningful here about $model ...</span>
+
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;render(<span class="hljs-string">'entry-confirm'</span>, [<span class="hljs-string">'model'</span> =&gt; <span class="hljs-variable">$model</span>]);
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-comment">// either the page is initially displayed or there is some validation error</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;render(<span class="hljs-string">'entry'</span>, [<span class="hljs-string">'model'</span> =&gt; <span class="hljs-variable">$model</span>]);
+        }
+    }
+}
+</code></pre>
+<p>The action first creates an <code>EntryForm</code> object. It then tries to populate the model
+with the data from <code>$_POST</code>, provided in Yii by <a href="yii-web-request.html#post()-detail">yii\web\Request::post()</a>.
+If the model is successfully populated (i.e., if the user has submitted the HTML form), the action will call
+<a href="yii-base-model.html#validate()-detail">validate()</a> to make sure the values entered are valid.</p>
+<blockquote class="info"><p><strong>Info: </strong>The expression <code>Yii::$app</code> represents the <a href="guide-structure-applications.html">application</a> instance,
+  which is a globally accessible singleton. It is also a <a href="guide-concept-service-locator.html">service locator</a> that
+  provides components such as <code>request</code>, <code>response</code>, <code>db</code>, etc. to support specific functionality.
+  In the above code, the <code>request</code> component of the application instance is used to access the <code>$_POST</code> data.</p>
+</blockquote>
+<p>If everything is fine, the action will render a view named <code>entry-confirm</code> to confirm the successful submission
+of the data to the user. If no data is submitted or the data contains errors, the <code>entry</code> view will
+be rendered, wherein the HTML form will be shown, along with any validation error messages.</p>
+<blockquote class="note"><p><strong>Note: </strong>In this very simple example we just render the confirmation page upon valid data submission. In practice,
+  you should consider using <a href="yii-web-controller.html#refresh()-detail">refresh()</a> or <a href="yii-web-controller.html#redirect()-detail">redirect()</a>
+  to avoid <a href="http://en.wikipedia.org/wiki/Post/Redirect/Get">form resubmission problems</a>.</p>
+</blockquote>
+<h2>Creating Views  <span id="creating-views"></span><a href="#creating-views" class="hashlink">&para;</a></h2><p>Finally, create two view files named <code>entry-confirm</code> and <code>entry</code>. These will be rendered by the <code>entry</code> action,
+as just described.</p>
+<p>The <code>entry-confirm</code> view simply displays the name and email data. It should be stored in the file <code>views/site/entry-confirm.php</code>.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-preprocessor">?&gt;</span>
+&lt;p&gt;You have entered the following information:&lt;/p&gt;
+
+&lt;ul&gt;
+    &lt;li&gt;&lt;label&gt;Name&lt;/label&gt;: <span class="hljs-preprocessor">&lt;?</span>= Html::encode(<span class="hljs-variable">$model</span>-&gt;name) <span class="hljs-preprocessor">?&gt;</span>&lt;/li&gt;
+    &lt;li&gt;&lt;label&gt;Email&lt;/label&gt;: <span class="hljs-preprocessor">&lt;?</span>= Html::encode(<span class="hljs-variable">$model</span>-&gt;email) <span class="hljs-preprocessor">?&gt;</span>&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>The <code>entry</code> view displays an HTML form. It should be stored in the file <code>views/site/entry.php</code>.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">ActiveForm</span>;
+<span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-preprocessor">&lt;?php</span> <span class="hljs-variable">$form</span> = ActiveForm::begin(); <span class="hljs-preprocessor">?&gt;</span>
+
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'name'</span>) <span class="hljs-preprocessor">?&gt;</span>
+
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'email'</span>) <span class="hljs-preprocessor">?&gt;</span>
+
+    &lt;div <span class="hljs-class"><span class="hljs-keyword">class</span>="<span class="hljs-title">form</span>-<span class="hljs-title">group</span>"&gt;
+        &lt;?= <span class="hljs-title">Html</span>::<span class="hljs-title">submitButton</span>('<span class="hljs-title">Submit</span>', ['<span class="hljs-title">class</span>' =&gt; '<span class="hljs-title">btn</span> <span class="hljs-title">btn</span>-<span class="hljs-title">primary</span>']) ?&gt;
+    &lt;/<span class="hljs-title">div</span>&gt;
+
+&lt;?<span class="hljs-title">php</span> <span class="hljs-title">ActiveForm</span>::<span class="hljs-title">end</span>(); ?&gt;
+</span></code></pre>
+<p>The view uses a powerful <a href="guide-structure-widgets.html">widget</a> called <a href="yii-widgets-activeform.html">ActiveForm</a> to
+build the HTML form. The <code>begin()</code> and <code>end()</code> methods of the widget render the opening and closing
+form tags, respectively. Between the two method calls, input fields are created by the
+<a href="yii-widgets-activeform.html#field()-detail">field()</a> method. The first input field is for the "name" data,
+and the second for the "email" data. After the input fields, the <a href="yii-helpers-basehtml.html#submitButton()-detail">yii\helpers\Html::submitButton()</a> method
+is called to generate a submit button.</p>
+<h2>Trying it Out  <span id="trying-it-out"></span><a href="#trying-it-out" class="hashlink">&para;</a></h2><p>To see how it works, use your browser to access the following URL:</p>
+<pre><code class="hljs less"><span class="hljs-attribute">http</span>:<span class="hljs-comment">//hostname/index.php?r=site%2Fentry</span>
+</code></pre>
+<p>You will see a page displaying a form with two input fields. In front of each input field, a label indicates what data is to be entered. If you click the submit button without
+entering anything, or if you do not provide a valid email address, you will see an error message displayed next to each problematic input field.</p>
+<p><img src="images/start-form-validation.png" alt="Form with Validation Errors" /></p>
+<p>After entering a valid name and email address and clicking the submit button, you will see a new page
+displaying the data that you just entered.</p>
+<p><img src="images/start-entry-confirmation.png" alt="Confirmation of Data Entry" /></p>
+<h3>Magic Explained  <span id="magic-explained"></span><a href="#magic-explained" class="hashlink">&para;</a></h3><p>You may wonder how the HTML form works behind the scene, because it seems almost magical that it can
+display a label for each input field and show error messages if you do not enter the data correctly
+without reloading the page.</p>
+<p>Yes, the data validation is initially done on the client-side using JavaScript, and secondarily performed on the server-side via PHP.
+<a href="yii-widgets-activeform.html">yii\widgets\ActiveForm</a> is smart enough to extract the validation rules that you have declared in <code>EntryForm</code>,
+turn them into executable JavaScript code, and use the JavaScript to perform data validation. In case you have disabled
+JavaScript on your browser, the validation will still be performed on the server-side, as shown in
+the <code>actionEntry()</code> method. This ensures data validity in all circumstances.</p>
+<blockquote class="warning"><p><strong>Warning: </strong>Client-side validation is a convenience that provides for a better user experience. Server-side validation
+  is always required, whether or not client-side validation is in place.</p>
+</blockquote>
+<p>The labels for input fields are generated by the <code>field()</code> method, using the property names from the model.
+For example, the label <code>Name</code> will be generated for the <code>name</code> property. </p>
+<p>You may customize a label within a view using 
+the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'name'</span>)-&gt;label(<span class="hljs-string">'Your Name'</span>) <span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'email'</span>)-&gt;label(<span class="hljs-string">'Your Email'</span>) <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>Yii provides many such widgets to help you quickly build complex and dynamic views.
+  As you will learn later, writing a new widget is also extremely easy. You may want to turn much of your
+  view code into reusable widgets to simplify view development in future.</p>
+</blockquote>
+<h2>Summary  <span id="summary"></span><a href="#summary" class="hashlink">&para;</a></h2><p>In this section of the guide, you have touched every part in the MVC architectural pattern. You have learned how
+to create a model class to represent the user data and validate said data.</p>
+<p>You have also learned how to get data from users and how to display data back in the browser. This is a task that
+could take you a lot of time when developing an application, but Yii provides powerful widgets
+to make this task very easy.</p>
+<p>In the next section, you will learn how to work with databases, which are needed in nearly every application.</p>

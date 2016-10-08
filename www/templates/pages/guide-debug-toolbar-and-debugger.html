@@ -1,0 +1,112 @@
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-debug-extension-for-yii-2" class="anchor" href="#debug-extension-for-yii-2" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Debug Extension for Yii 2</h1>
+
+<p>This extension provides a debugger for Yii 2 applications. When this extension is used,
+a debugger toolbar will appear at the bottom of every page. The extension also provides
+a set of standalone pages to display more detailed debug information.</p>
+
+<p>The toolbar displays information about the currently opened page, while the debugger can be used to analyze data you've
+previously collected (i.e., to confirm the values of variables).</p>
+
+<p>Out of the box these tools allow you to:</p>
+
+<ul>
+<li>quickly get the framework version, PHP version, response status, current controller and action, performance info and
+more via toolbar;</li>
+<li>browse the application and PHP configuration;</li>
+<li>view the request data, request and response headers, session data, and environment variables;</li>
+<li>see, search, and filter the logs;</li>
+<li>view any profiling results;</li>
+<li>view the database queries executed by the page;</li>
+<li>view the emails sent by the application.</li>
+</ul>
+
+<p>All of this information will be available per request, allowing you to revisit the information for past requests as well.</p>
+
+
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h1>
+
+<h2><a id="user-content-getting-composer-package" class="anchor" href="#getting-composer-package" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Getting Composer package</h2>
+
+<p>The preferred way to install this extension is through <a href="http://getcomposer.org/download/">composer</a>.</p>
+
+<p>Either run</p>
+
+<pre><code>php composer.phar require --prefer-dist yiisoft/yii2-debug
+</code></pre>
+
+<p>or add</p>
+
+<pre><code>"yiisoft/yii2-debug": "~2.0.0"
+</code></pre>
+
+<p>to the require section of your <code>composer.json</code> file.</p>
+
+<h2><a id="user-content-configuring-application" class="anchor" href="#configuring-application" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuring application</h2>
+
+<p>To enable extension, add these lines to your configuration file to enable the debug module:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span>],</span>
+<span class="pl-s1"><span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>yii\debug\Module<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">    ],</span>
+<span class="pl-s1">]</span></pre></div>
+
+<p>By default, the debug module only works when browsing the website from localhost. If you want to use it on a remote (staging)
+server, add the parameter <code>allowedIPs</code> to the configuration to whitelist your IP:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span>],</span>
+<span class="pl-s1"><span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>yii\debug\Module<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>allowedIPs<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>1.2.3.4<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>127.0.0.1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>::1<span class="pl-pds">'</span></span>]</span>
+<span class="pl-s1">    ]</span>
+<span class="pl-s1">]</span></pre></div>
+
+<p>If you are using <code>enableStrictParsing</code> URL manager option, add the following to your <code>rules</code>:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-s"><span class="pl-pds">'</span>urlManager<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>enableStrictParsing<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">true</span>,</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>rules<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-c">// ...</span></span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>debug/&lt;controller&gt;/&lt;action&gt;<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>debug/&lt;controller&gt;/&lt;action&gt;<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">    ],</span>
+<span class="pl-s1">],</span></pre></div>
+
+<blockquote>
+<p>Note: the debugger stores information about each request in the <code>@runtime/debug</code> directory. If you have problems using
+the debugger, such as weird error messages when using it, or the toolbar not showing up or not showing any requests, check
+whether the web server has enough permissions to access this directory and the files located inside.</p>
+</blockquote>
+
+<h3><a id="user-content-extra-configuration-for-logging-and-profiling" class="anchor" href="#extra-configuration-for-logging-and-profiling" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Extra configuration for logging and profiling</h3>
+
+<p>Logging and profiling are simple but powerful tools that may help you to understand the execution flow of both the
+framework and the application. These tools are useful for development and production environments alike.</p>
+
+<p>While in a production environment, you should log only significantly important  messages manually, as described in
+<a href="https://github.com/yiisoft/yii2/blob/master/docs/guide/runtime-logging.md">logging guide section</a>. It hurts performance too much to continue to log all messages in production.</p>
+
+<p>In a development environment, the more logging the better, and it's especially useful to record the execution trace.</p>
+
+<p>In order to see the trace messages that will help you to understand what happens under the hood of the framework, you
+need to set the trace level in the configuration file:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">return</span> [</span>
+<span class="pl-s1">    <span class="pl-c">// ...</span></span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>components<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>log<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>traceLevel<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">YII_DEBUG</span> ? <span class="pl-c1">3</span> : <span class="pl-c1">0</span>, <span class="pl-c">// &lt;-- here</span></span></pre></div>
+
+<p>By default, the trace level is automatically set to <code>3</code> if Yii is running in debug mode, as determined by the presence of
+the following line in your <code>index.php</code> file:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-c1">defined</span>(<span class="pl-s"><span class="pl-pds">'</span>YII_DEBUG<span class="pl-pds">'</span></span>) <span class="pl-k">or</span> <span class="pl-c1">define</span>(<span class="pl-s"><span class="pl-pds">'</span>YII_DEBUG<span class="pl-pds">'</span></span>, <span class="pl-c1">true</span>);</span></pre></div>
+
+<blockquote>
+<p>Note: Make sure to disable debug mode in production environments since it may have a significant and adverse performance
+effect. Further, the debug mode may expose sensitive information to end users.</p>
+</blockquote>
+</article>
+
+<a href="https://github.com/yiisoft/yii2-debug/blob/master/docs/guide/README.md">For more information</a>

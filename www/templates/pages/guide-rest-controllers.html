@@ -1,0 +1,153 @@
+
+        <h1>Controllers <span id="controllers"></span><a href="#controllers" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#creating-controller">Creating Controller Classes</a></li>
+<li><a href="#filters">Filters</a></li>
+<li><a href="#extending-active-controller">Extending ActiveController</a></li></ol></div>
+<p>After creating the resource classes and specifying how resource data should be formatted, the next thing
+to do is to create controller actions to expose the resources to end users through RESTful APIs.</p>
+<p>Yii provides two base controller classes to simplify your work of creating RESTful actions:
+<a href="yii-rest-controller.html">yii\rest\Controller</a> and <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a>. The difference between these two controllers
+is that the latter provides a default set of actions that are specifically designed to deal with
+resources represented as <a href="guide-db-active-record.html">Active Record</a>. So if you are using <a href="guide-db-active-record.html">Active Record</a>
+and are comfortable with the provided built-in actions, you may consider extending your controller classes
+from <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a>, which will allow you to create powerful RESTful APIs with minimal code.</p>
+<p>Both <a href="yii-rest-controller.html">yii\rest\Controller</a> and <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a> provide the following features, some of which
+will be described in detail in the next few sections:</p>
+<ul>
+<li>HTTP method validation;</li>
+<li><a href="guide-rest-response-formatting.html">Content negotiation and Data formatting</a>;</li>
+<li><a href="guide-rest-authentication.html">Authentication</a>;</li>
+<li><a href="guide-rest-rate-limiting.html">Rate limiting</a>.</li>
+</ul>
+<p><a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a> in addition provides the following features:</p>
+<ul>
+<li>A set of commonly needed actions: <code>index</code>, <code>view</code>, <code>create</code>, <code>update</code>, <code>delete</code>, <code>options</code>;</li>
+<li>User authorization in regard to the requested action and resource.</li>
+</ul>
+<h2>Creating Controller Classes  <span id="creating-controller"></span><a href="#creating-controller" class="hashlink">&para;</a></h2><p>When creating a new controller class, a convention in naming the controller class is to use
+the type name of the resource and use singular form. For example, to serve user information,
+the controller may be named as <code>UserController</code>.</p>
+<p>Creating a new action is similar to creating an action for a Web application. The only difference
+is that instead of rendering the result using a view by calling the <code>render()</code> method, for RESTful actions
+you directly return the data. The <a href="yii-rest-controller.html#$serializer-detail">serializer</a> and the
+<a href="yii-web-response.html">response object</a> will handle the conversion from the original data to the requested
+format. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionView</span><span class="hljs-params">(<span class="hljs-variable">$id</span>)</span>
+</span>{
+    <span class="hljs-keyword">return</span> User::findOne(<span class="hljs-variable">$id</span>);
+}
+</code></pre>
+<h2>Filters  <span id="filters"></span><a href="#filters" class="hashlink">&para;</a></h2><p>Most RESTful API features provided by <a href="yii-rest-controller.html">yii\rest\Controller</a> are implemented in terms of <a href="guide-structure-filters.html">filters</a>.
+In particular, the following filters will be executed in the order they are listed:</p>
+<ul>
+<li><a href="yii-filters-contentnegotiator.html">contentNegotiator</a>: supports content negotiation, to be explained in
+the <a href="guide-rest-response-formatting.html">Response Formatting</a> section;</li>
+<li><a href="yii-filters-verbfilter.html">verbFilter</a>: supports HTTP method validation;</li>
+<li><a href="yii-filters-auth-authmethod.html">authenticator</a>: supports user authentication, to be explained in
+the <a href="guide-rest-authentication.html">Authentication</a> section;</li>
+<li><a href="yii-filters-ratelimiter.html">rateLimiter</a>: supports rate limiting, to be explained in
+the <a href="guide-rest-rate-limiting.html">Rate Limiting</a> section.</li>
+</ul>
+<p>These named filters are declared in the <a href="yii-rest-controller.html#behaviors()-detail">behaviors()</a> method.
+You may override this method to configure individual filters, disable some of them, or add your own filters.
+For example, if you only want to use HTTP basic authentication, you may write the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">filters</span>\<span class="hljs-title">auth</span>\<span class="hljs-title">HttpBasicAuth</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">behaviors</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-variable">$behaviors</span> = <span class="hljs-keyword">parent</span>::behaviors();
+    <span class="hljs-variable">$behaviors</span>[<span class="hljs-string">'authenticator'</span>] = [
+        <span class="hljs-string">'class'</span> =&gt; HttpBasicAuth::className(),
+    ];
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$behaviors</span>;
+}
+</code></pre>
+<h3>CORS  <span id="cors"></span><a href="#cors" class="hashlink">&para;</a></h3><p>Adding the <a href="guide-structure-filters.html#cors">Cross-Origin Resource Sharing</a> filter to a controller is a bit more complicated
+than adding other filters described above, because the CORS filter has to be applied before authentication methods
+and thus needs a slightly different approach compared to other filters. Also authentication has to be disabled for the
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests">CORS Preflight requests</a>
+so that a browser can safely determine whether a request can be made beforehand without the need for sending
+authentication credentials. The following shows the code that is needed to add the <a href="yii-filters-cors.html">yii\filters\Cors</a> filter
+to an existing controller that extends from <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">filters</span>\<span class="hljs-title">auth</span>\<span class="hljs-title">HttpBasicAuth</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">behaviors</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-variable">$behaviors</span> = <span class="hljs-keyword">parent</span>::behaviors();
+
+    <span class="hljs-comment">// remove authentication filter</span>
+    <span class="hljs-variable">$auth</span> = <span class="hljs-variable">$behaviors</span>[<span class="hljs-string">'authenticator'</span>];
+    <span class="hljs-keyword">unset</span>(<span class="hljs-variable">$behaviors</span>[<span class="hljs-string">'authenticator'</span>]);
+    
+    <span class="hljs-comment">// add CORS filter</span>
+    <span class="hljs-variable">$behaviors</span>[<span class="hljs-string">'corsFilter'</span>] = [
+        <span class="hljs-string">'class'</span> =&gt; \yii\filters\Cors::className(),
+    ];
+    
+    <span class="hljs-comment">// re-add authentication filter</span>
+    <span class="hljs-variable">$behaviors</span>[<span class="hljs-string">'authenticator'</span>] = <span class="hljs-variable">$auth</span>;
+    <span class="hljs-comment">// avoid authentication on CORS-pre-flight requests (HTTP OPTIONS method)</span>
+    <span class="hljs-variable">$behaviors</span>[<span class="hljs-string">'authenticator'</span>][<span class="hljs-string">'except'</span>] = [<span class="hljs-string">'options'</span>];
+
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$behaviors</span>;
+}
+</code></pre>
+<h2>Extending <code>ActiveController</code>  <span id="extending-active-controller"></span><a href="#extending-active-controller" class="hashlink">&para;</a></h2><p>If your controller class extends from <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a>, you should set
+its <a href="yii-rest-activecontroller.html#$modelClass-detail">modelClass</a> property to be the name of the resource class
+that you plan to serve through this controller. The class must extend from <a href="yii-db-activerecord.html">yii\db\ActiveRecord</a>.</p>
+<h3>Customizing Actions  <span id="customizing-actions"></span><a href="#customizing-actions" class="hashlink">&para;</a></h3><p>By default, <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a> provides the following actions:</p>
+<ul>
+<li><a href="yii-rest-indexaction.html">index</a>: list resources page by page;</li>
+<li><a href="yii-rest-viewaction.html">view</a>: return the details of a specified resource;</li>
+<li><a href="yii-rest-createaction.html">create</a>: create a new resource;</li>
+<li><a href="yii-rest-updateaction.html">update</a>: update an existing resource;</li>
+<li><a href="yii-rest-deleteaction.html">delete</a>: delete the specified resource;</li>
+<li><a href="yii-rest-optionsaction.html">options</a>: return the supported HTTP methods.</li>
+</ul>
+<p>All these actions are declared through the <a href="yii-rest-activecontroller.html#actions()-detail">actions()</a> method.
+You may configure these actions or disable some of them by overriding the <code>actions()</code> method, like shown the following,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actions</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-variable">$actions</span> = <span class="hljs-keyword">parent</span>::actions();
+
+    <span class="hljs-comment">// disable the "delete" and "create" actions</span>
+    <span class="hljs-keyword">unset</span>(<span class="hljs-variable">$actions</span>[<span class="hljs-string">'delete'</span>], <span class="hljs-variable">$actions</span>[<span class="hljs-string">'create'</span>]);
+
+    <span class="hljs-comment">// customize the data provider preparation with the "prepareDataProvider()" method</span>
+    <span class="hljs-variable">$actions</span>[<span class="hljs-string">'index'</span>][<span class="hljs-string">'prepareDataProvider'</span>] = [<span class="hljs-variable">$this</span>, <span class="hljs-string">'prepareDataProvider'</span>];
+
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$actions</span>;
+}
+
+<span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepareDataProvider</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-comment">// prepare and return a data provider for the "index" action</span>
+}
+</code></pre>
+<p>Please refer to the class references for individual action classes to learn what configuration options are available.</p>
+<h3>Performing Access Check  <span id="performing-access-check"></span><a href="#performing-access-check" class="hashlink">&para;</a></h3><p>When exposing resources through RESTful APIs, you often need to check if the current user has the permission
+to access and manipulate the requested resource(s). With <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a>, this can be done
+by overriding the <a href="yii-rest-activecontroller.html#checkAccess()-detail">checkAccess()</a> method like the following,</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">/**
+ * Checks the privilege of the current user.
+ *
+ * This method should be overridden to check whether the current user has the privilege
+ * to run the specified action against the specified data model.
+ * If the user does not have access, a [[ForbiddenHttpException]] should be thrown.
+ *
+ * <span class="hljs-doctag">@param</span> string $action the ID of the action to be executed
+ * <span class="hljs-doctag">@param</span> \yii\base\Model $model the model to be accessed. If `null`, it means no specific model is being accessed.
+ * <span class="hljs-doctag">@param</span> array $params additional parameters
+ * <span class="hljs-doctag">@throws</span> ForbiddenHttpException if the user does not have access
+ */</span>
+<span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkAccess</span><span class="hljs-params">(<span class="hljs-variable">$action</span>, <span class="hljs-variable">$model</span> = null, <span class="hljs-variable">$params</span> = [])</span>
+</span>{
+    <span class="hljs-comment">// check if the user can access $action and $model</span>
+    <span class="hljs-comment">// throw ForbiddenHttpException if access should be denied</span>
+}
+</code></pre>
+<p>The <code>checkAccess()</code> method will be called by the default actions of <a href="yii-rest-activecontroller.html">yii\rest\ActiveController</a>. If you create
+new actions and also want to perform access check, you should call this method explicitly in the new actions.</p>
+<blockquote class="tip"><p><strong>Tip: </strong>You may implement <code>checkAccess()</code> by using the <a href="guide-security-authorization.html">Role-Based Access Control (RBAC) component</a>.</p>
+</blockquote>
+        

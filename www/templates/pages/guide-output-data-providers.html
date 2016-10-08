@@ -1,0 +1,299 @@
+
+        <h1>Data Providers <span id="data-providers"></span><a href="#data-providers" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#active-data-provider">Active Data Provider</a></li>
+<li><a href="#sql-data-provider">SQL Data Provider</a></li>
+<li><a href="#array-data-provider">Array Data Provider</a></li>
+<li><a href="#working-with-keys">Working with Data Keys</a></li>
+<li><a href="#custom-data-provider">Creating Custom Data Provider</a></li></ol></div>
+<p>In the <a href="guide-output-pagination.html">Pagination</a> and <a href="guide-output-sorting.html">Sorting</a> sections, we have described how to
+allow end users to choose a particular page of data to display and sort them by some columns. Because the task
+of paginating and sorting data is very common, Yii provides a set of <em>data provider</em> classes to encapsulate it.</p>
+<p>A data provider is a class implementing <a href="yii-data-dataproviderinterface.html">yii\data\DataProviderInterface</a>. It mainly supports retrieving paginated
+and sorted data. It is usually used to work with <a href="guide-output-data-widgets.html">data widgets</a> so that end users can 
+interactively paginate and sort data. </p>
+<p>The following data provider classes are included in the Yii releases:</p>
+<ul>
+<li><a href="yii-data-activedataprovider.html">yii\data\ActiveDataProvider</a>: uses <a href="yii-db-query.html">yii\db\Query</a> or <a href="yii-db-activequery.html">yii\db\ActiveQuery</a> to query data from databases
+and return them in terms of arrays or <a href="guide-db-active-record.html">Active Record</a> instances.</li>
+<li><a href="yii-data-sqldataprovider.html">yii\data\SqlDataProvider</a>: executes a SQL statement and returns database data as arrays.</li>
+<li><a href="yii-data-arraydataprovider.html">yii\data\ArrayDataProvider</a>: takes a big array and returns a slice of it based on the paginating and sorting
+specifications.</li>
+</ul>
+<p>The usage of all these data providers share the following common pattern:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// create the data provider by configuring its pagination and sort properties</span>
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> XyzDataProvider([
+    <span class="hljs-string">'pagination'</span> =&gt; [...],
+    <span class="hljs-string">'sort'</span> =&gt; [...],
+]);
+
+<span class="hljs-comment">// retrieves paginated and sorted data</span>
+<span class="hljs-variable">$models</span> = <span class="hljs-variable">$provider</span>-&gt;getModels();
+
+<span class="hljs-comment">// get the number of data items in the current page</span>
+<span class="hljs-variable">$count</span> = <span class="hljs-variable">$provider</span>-&gt;getCount();
+
+<span class="hljs-comment">// get the total number of data items across all pages</span>
+<span class="hljs-variable">$totalCount</span> = <span class="hljs-variable">$provider</span>-&gt;getTotalCount();
+</code></pre>
+<p>You specify the pagination and sorting behaviors of a data provider by configuring its 
+<a href="yii-data-basedataprovider.html#$pagination-detail">pagination</a> and <a href="yii-data-basedataprovider.html#$sort-detail">sort</a> properties
+which correspond to the configurations for <a href="yii-data-pagination.html">yii\data\Pagination</a> and <a href="yii-data-sort.html">yii\data\Sort</a>, respectively.
+You may also configure them to be <code>false</code> to disable pagination and/or sorting features.</p>
+<p><a href="guide-output-data-widgets.html">Data widgets</a>, such as <a href="yii-grid-gridview.html">yii\grid\GridView</a>, have a property named <code>dataProvider</code> which
+can take a data provider instance and display the data it provides. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">echo</span> yii\grid\GridView::widget([
+    <span class="hljs-string">'dataProvider'</span> =&gt; <span class="hljs-variable">$dataProvider</span>,
+]);
+</code></pre>
+<p>These data providers mainly vary in the way how the data source is specified. In the following subsections,
+we will explain the detailed usage of each of these data providers.</p>
+<h2>Active Data Provider  <span id="active-data-provider"></span><a href="#active-data-provider" class="hashlink">&para;</a></h2><p>To use <a href="yii-data-activedataprovider.html">yii\data\ActiveDataProvider</a>, you should configure its <a href="yii-data-activedataprovider.html#$query-detail">query</a> property.
+It can take either a <a href="yii-db-query.html">yii\db\Query</a> or <a href="yii-db-activequery.html">yii\db\ActiveQuery</a> object. If the former, the data returned will be arrays;
+if the latter, the data returned can be either arrays or <a href="guide-db-active-record.html">Active Record</a> instances.
+For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">data</span>\<span class="hljs-title">ActiveDataProvider</span>;
+
+<span class="hljs-variable">$query</span> = Post::find()-&gt;where([<span class="hljs-string">'status'</span> =&gt; <span class="hljs-number">1</span>]);
+
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> ActiveDataProvider([
+    <span class="hljs-string">'query'</span> =&gt; <span class="hljs-variable">$query</span>,
+    <span class="hljs-string">'pagination'</span> =&gt; [
+        <span class="hljs-string">'pageSize'</span> =&gt; <span class="hljs-number">10</span>,
+    ],
+    <span class="hljs-string">'sort'</span> =&gt; [
+        <span class="hljs-string">'defaultOrder'</span> =&gt; [
+            <span class="hljs-string">'created_at'</span> =&gt; SORT_DESC,
+            <span class="hljs-string">'title'</span> =&gt; SORT_ASC, 
+        ]
+    ],
+]);
+
+<span class="hljs-comment">// returns an array of Post objects</span>
+<span class="hljs-variable">$posts</span> = <span class="hljs-variable">$provider</span>-&gt;getModels();
+</code></pre>
+<p>If <code>$query</code> in the above example is created using the following code, then the data provider will return raw arrays.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">db</span>\<span class="hljs-title">Query</span>;
+
+<span class="hljs-variable">$query</span> = (<span class="hljs-keyword">new</span> Query())-&gt;from(<span class="hljs-string">'post'</span>)-&gt;where([<span class="hljs-string">'status'</span> =&gt; <span class="hljs-number">1</span>]); 
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>If a query already specifies the <code>orderBy</code> clause, the new ordering instructions given by end users
+  (through the <code>sort</code> configuration) will be appended to the existing <code>orderBy</code> clause. Any existing <code>limit</code>
+  and <code>offset</code> clauses will be overwritten by the pagination request from end users (through the <code>pagination</code> configuration). </p>
+</blockquote>
+<p>By default, <a href="yii-data-activedataprovider.html">yii\data\ActiveDataProvider</a> uses the <code>db</code> application component as the database connection. You may
+use a different database connection by configuring the <a href="yii-data-activedataprovider.html#$db-detail">yii\data\ActiveDataProvider::$db</a> property.</p>
+<h2>SQL Data Provider  <span id="sql-data-provider"></span><a href="#sql-data-provider" class="hashlink">&para;</a></h2><p><a href="yii-data-sqldataprovider.html">yii\data\SqlDataProvider</a> works with a raw SQL statement which is used to fetch the needed
+data. Based on the specifications of <a href="yii-data-basedataprovider.html#$sort-detail">sort</a> and 
+<a href="yii-data-basedataprovider.html#$pagination-detail">pagination</a>, the provider will adjust the <code>ORDER BY</code> and <code>LIMIT</code>
+clauses of the SQL statement accordingly to fetch only the requested page of data in the desired order.</p>
+<p>To use <a href="yii-data-sqldataprovider.html">yii\data\SqlDataProvider</a>, you should specify the <a href="yii-data-sqldataprovider.html#$sql-detail">sql</a> property as well
+as the <a href="yii-data-basedataprovider.html#$totalCount-detail">totalCount</a> property. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">data</span>\<span class="hljs-title">SqlDataProvider</span>;
+
+<span class="hljs-variable">$count</span> = Yii::<span class="hljs-variable">$app</span>-&gt;db-&gt;createCommand(<span class="hljs-string">'
+    SELECT COUNT(*) FROM post WHERE status=:status
+'</span>, [<span class="hljs-string">':status'</span> =&gt; <span class="hljs-number">1</span>])-&gt;queryScalar();
+
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> SqlDataProvider([
+    <span class="hljs-string">'sql'</span> =&gt; <span class="hljs-string">'SELECT * FROM post WHERE status=:status'</span>,
+    <span class="hljs-string">'params'</span> =&gt; [<span class="hljs-string">':status'</span> =&gt; <span class="hljs-number">1</span>],
+    <span class="hljs-string">'totalCount'</span> =&gt; <span class="hljs-variable">$count</span>,
+    <span class="hljs-string">'pagination'</span> =&gt; [
+        <span class="hljs-string">'pageSize'</span> =&gt; <span class="hljs-number">10</span>,
+    ],
+    <span class="hljs-string">'sort'</span> =&gt; [
+        <span class="hljs-string">'attributes'</span> =&gt; [
+            <span class="hljs-string">'title'</span>,
+            <span class="hljs-string">'view_count'</span>,
+            <span class="hljs-string">'created_at'</span>,
+        ],
+    ],
+]);
+
+<span class="hljs-comment">// returns an array of data rows</span>
+<span class="hljs-variable">$models</span> = <span class="hljs-variable">$provider</span>-&gt;getModels();
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>The <a href="yii-data-basedataprovider.html#$totalCount-detail">totalCount</a> property is required only if you need to
+  paginate the data. This is because the SQL statement specified via <a href="yii-data-sqldataprovider.html#$sql-detail">sql</a>
+  will be modified by the provider to return only the currently requested page of data. The provider still
+  needs to know the total number of data items in order to correctly calculate the number of pages available.</p>
+</blockquote>
+<h2>Array Data Provider  <span id="array-data-provider"></span><a href="#array-data-provider" class="hashlink">&para;</a></h2><p><a href="yii-data-arraydataprovider.html">yii\data\ArrayDataProvider</a> is best used when working with a big array. The provider allows you to return
+a page of the array data sorted by one or multiple columns. To use <a href="yii-data-arraydataprovider.html">yii\data\ArrayDataProvider</a>, you should
+specify the <a href="yii-data-arraydataprovider.html#$allModels-detail">allModels</a> property as the big array.
+Elements in the big array can be either associative arrays
+(e.g. query results of <a href="guide-db-dao.html">DAO</a>) or objects (e.g. <a href="guide-db-active-record.html">Active Record</a> instances).
+For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">data</span>\<span class="hljs-title">ArrayDataProvider</span>;
+
+<span class="hljs-variable">$data</span> = [
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">1</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'name 1'</span>, ...],
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">2</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'name 2'</span>, ...],
+    ...
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">100</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'name 100'</span>, ...],
+];
+
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> ArrayDataProvider([
+    <span class="hljs-string">'allModels'</span> =&gt; <span class="hljs-variable">$data</span>,
+    <span class="hljs-string">'pagination'</span> =&gt; [
+        <span class="hljs-string">'pageSize'</span> =&gt; <span class="hljs-number">10</span>,
+    ],
+    <span class="hljs-string">'sort'</span> =&gt; [
+        <span class="hljs-string">'attributes'</span> =&gt; [<span class="hljs-string">'id'</span>, <span class="hljs-string">'name'</span>],
+    ],
+]);
+
+<span class="hljs-comment">// get the rows in the currently requested page</span>
+<span class="hljs-variable">$rows</span> = <span class="hljs-variable">$provider</span>-&gt;getModels();
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>Compared to <a href="#active-data-provider">Active Data Provider</a> and <a href="#sql-data-provider">SQL Data Provider</a>,
+  array data provider is less efficient because it requires loading <em>all</em> data into the memory.</p>
+</blockquote>
+<h2>Working with Data Keys  <span id="working-with-keys"></span><a href="#working-with-keys" class="hashlink">&para;</a></h2><p>When using the data items returned by a data provider, you often need to identify each data item with a unique key.
+For example, if the data items represent customer information, you may want to use the customer ID as the key
+for each customer data. Data providers can return a list of such keys corresponding with the data items returned 
+by <a href="yii-data-dataproviderinterface.html#getModels()-detail">yii\data\DataProviderInterface::getModels()</a>. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">data</span>\<span class="hljs-title">ActiveDataProvider</span>;
+
+<span class="hljs-variable">$query</span> = Post::find()-&gt;where([<span class="hljs-string">'status'</span> =&gt; <span class="hljs-number">1</span>]);
+
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> ActiveDataProvider([
+    <span class="hljs-string">'query'</span> =&gt; <span class="hljs-variable">$query</span>,
+]);
+
+<span class="hljs-comment">// returns an array of Post objects</span>
+<span class="hljs-variable">$posts</span> = <span class="hljs-variable">$provider</span>-&gt;getModels();
+
+<span class="hljs-comment">// returns the primary key values corresponding to $posts</span>
+<span class="hljs-variable">$ids</span> = <span class="hljs-variable">$provider</span>-&gt;getKeys();
+</code></pre>
+<p>In the above example, because you provide to <a href="yii-data-activedataprovider.html">yii\data\ActiveDataProvider</a> an <a href="yii-db-activequery.html">yii\db\ActiveQuery</a> object,
+it is intelligent enough to return primary key values as the keys. You may also explicitly specify how the key
+values should be calculated by configuring <a href="yii-data-activedataprovider.html#$key-detail">yii\data\ActiveDataProvider::$key</a> with a column name or
+a callable calculating key values. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// use "slug" column as key values</span>
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> ActiveDataProvider([
+    <span class="hljs-string">'query'</span> =&gt; Post::find(),
+    <span class="hljs-string">'key'</span> =&gt; <span class="hljs-string">'slug'</span>,
+]);
+
+<span class="hljs-comment">// use the result of md5(id) as key values</span>
+<span class="hljs-variable">$provider</span> = <span class="hljs-keyword">new</span> ActiveDataProvider([
+    <span class="hljs-string">'query'</span> =&gt; Post::find(),
+    <span class="hljs-string">'key'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$model</span>)</span> </span>{
+        <span class="hljs-keyword">return</span> md5(<span class="hljs-variable">$model</span>-&gt;id);
+    }
+]);
+</code></pre>
+<h2>Creating Custom Data Provider  <span id="custom-data-provider"></span><a href="#custom-data-provider" class="hashlink">&para;</a></h2><p>To create your own custom data provider classes, you should implement <a href="yii-data-dataproviderinterface.html">yii\data\DataProviderInterface</a>.
+An easier way is to extend from <a href="yii-data-basedataprovider.html">yii\data\BaseDataProvider</a> which allows you to focus on the core data provider
+logic. In particular, you mainly need to implement the following methods:</p>
+<ul>
+<li><a href="yii-data-basedataprovider.html#prepareModels()-detail">prepareModels()</a>: prepares the data models that will be made 
+available in the current page and returns them as an array.</li>
+<li><a href="yii-data-basedataprovider.html#prepareKeys()-detail">prepareKeys()</a>: accepts an array of currently available data models
+and returns keys associated with them.</li>
+<li><a href="yii-data-basedataprovider.html#prepareTotalCount()-detail">prepareTotalCount</a>: returns a value indicating the total number 
+of data models in the data provider.</li>
+</ul>
+<p>Below is an example of a data provider that reads CSV data efficiently:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">data</span>\<span class="hljs-title">BaseDataProvider</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CsvDataProvider</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseDataProvider</span>
+</span>{
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@var</span> string name of the CSV file to read
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$filename</span>;
+    
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@var</span> string|callable name of the key column or a callable returning it
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$key</span>;
+    
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@var</span> SplFileObject
+     */</span>
+    <span class="hljs-keyword">protected</span> <span class="hljs-variable">$fileObject</span>; <span class="hljs-comment">// SplFileObject is very convenient for seeking to particular line in a file</span>
+    
+ 
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@inheritdoc</span>
+     */</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">init</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">parent</span>::init();
+        
+        <span class="hljs-comment">// open file</span>
+        <span class="hljs-variable">$this</span>-&gt;fileObject = <span class="hljs-keyword">new</span> SplFileObject(<span class="hljs-variable">$this</span>-&gt;filename);
+    }
+ 
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@inheritdoc</span>
+     */</span>
+    <span class="hljs-keyword">protected</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepareModels</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-variable">$models</span> = [];
+        <span class="hljs-variable">$pagination</span> = <span class="hljs-variable">$this</span>-&gt;getPagination();
+ 
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$pagination</span> === <span class="hljs-keyword">false</span>) {
+            <span class="hljs-comment">// in case there's no pagination, read all lines</span>
+            <span class="hljs-keyword">while</span> (!<span class="hljs-variable">$this</span>-&gt;fileObject-&gt;eof()) {
+                <span class="hljs-variable">$models</span>[] = <span class="hljs-variable">$this</span>-&gt;fileObject-&gt;fgetcsv();
+                <span class="hljs-variable">$this</span>-&gt;fileObject-&gt;next();
+            }
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-comment">// in case there's pagination, read only a single page</span>
+            <span class="hljs-variable">$pagination</span>-&gt;totalCount = <span class="hljs-variable">$this</span>-&gt;getTotalCount();
+            <span class="hljs-variable">$this</span>-&gt;fileObject-&gt;seek(<span class="hljs-variable">$pagination</span>-&gt;getOffset());
+            <span class="hljs-variable">$limit</span> = <span class="hljs-variable">$pagination</span>-&gt;getLimit();
+ 
+            <span class="hljs-keyword">for</span> (<span class="hljs-variable">$count</span> = <span class="hljs-number">0</span>; <span class="hljs-variable">$count</span> &lt; <span class="hljs-variable">$limit</span>; ++<span class="hljs-variable">$count</span>) {
+                <span class="hljs-variable">$models</span>[] = <span class="hljs-variable">$this</span>-&gt;fileObject-&gt;fgetcsv();
+                <span class="hljs-variable">$this</span>-&gt;fileObject-&gt;next();
+            }
+        }
+ 
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$models</span>;
+    }
+ 
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@inheritdoc</span>
+     */</span>
+    <span class="hljs-keyword">protected</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepareKeys</span><span class="hljs-params">(<span class="hljs-variable">$models</span>)</span>
+    </span>{
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$this</span>-&gt;key !== <span class="hljs-keyword">null</span>) {
+            <span class="hljs-variable">$keys</span> = [];
+ 
+            <span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$models</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$model</span>) {
+                <span class="hljs-keyword">if</span> (is_string(<span class="hljs-variable">$this</span>-&gt;key)) {
+                    <span class="hljs-variable">$keys</span>[] = <span class="hljs-variable">$model</span>[<span class="hljs-variable">$this</span>-&gt;key];
+                } <span class="hljs-keyword">else</span> {
+                    <span class="hljs-variable">$keys</span>[] = call_user_func(<span class="hljs-variable">$this</span>-&gt;key, <span class="hljs-variable">$model</span>);
+                }
+            }
+ 
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$keys</span>;
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">return</span> array_keys(<span class="hljs-variable">$models</span>);
+        }
+    }
+ 
+    <span class="hljs-comment">/**
+     * <span class="hljs-doctag">@inheritdoc</span>
+     */</span>
+    <span class="hljs-keyword">protected</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepareTotalCount</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-variable">$count</span> = <span class="hljs-number">0</span>;
+ 
+        <span class="hljs-keyword">while</span> (!<span class="hljs-variable">$this</span>-&gt;fileObject-&gt;eof()) {
+            <span class="hljs-variable">$this</span>-&gt;fileObject-&gt;next();
+            ++<span class="hljs-variable">$count</span>;
+        }
+ 
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$count</span>;
+    }
+}
+</code></pre>
+        

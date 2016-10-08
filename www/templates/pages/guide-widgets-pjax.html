@@ -1,0 +1,17 @@
+<p><strong>Pjax is a widget integrating the <a href="https://github.com/yiisoft/jquery-pjax">pjax</a> jQuery plugin.</strong></p>
+    <p>Pjax only deals with the content enclosed between its <a href="yii-base-widget.html#begin()-detail">begin()</a> and <a href="yii-base-widget.html#end()-detail">end()</a> calls, called the <em>body content</em> of the widget.
+By default, any link click or form submission (for those forms with <code>data-pjax</code> attribute) within the body content
+will trigger an AJAX request. In responding to the AJAX request, Pjax will send the updated body content (based
+on the AJAX request) to the client which will replace the old content with the new one. The browser's URL will then
+be updated using pushState. The whole process requires no reloading of the layout or resources (js, css).</p>
+<p>You may configure <a href="yii-widgets-pjax.html#$linkSelector-detail">$linkSelector</a> to specify which links should trigger pjax, and configure <a href="yii-widgets-pjax.html#$formSelector-detail">$formSelector</a>
+to specify which form submission may trigger pjax.</p>
+<p>You may disable pjax for a specific link inside the container by adding <code>data-pjax="0"</code> attribute to this link.</p>
+<p>The following example shows how to use Pjax with the <a href="yii-grid-gridview.html">yii\grid\GridView</a> widget so that the grid pagination,
+sorting and filtering can be done via pjax:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">Pjax</span>;
+
+Pjax::begin();
+<span class="hljs-keyword">echo</span> GridView::widget([...]);
+Pjax::end();
+</code></pre>

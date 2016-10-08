@@ -1,0 +1,78 @@
+<h2><a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h2>
+
+<p>The preferred way to install this extension is through <a href="http://getcomposer.org/download/">composer</a>.</p>
+
+<p>Either run</p>
+
+<pre><code>composer require --prefer-dist yiisoft/yii2-apidoc
+</code></pre>
+
+<p>The above command may not work on an existing project due to version conflicts that need to be resolved, so it is preferred to add the package manually to the require section of your composer.json:</p>
+
+<div class="highlight highlight-source-json"><pre><span class="pl-s"><span class="pl-pds">"</span>yiisoft/yii2-apidoc<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>~2.0.0<span class="pl-pds">"</span></span></pre></div>
+
+<p>afterwards run <code>composer update</code>. You may also run <code>composer update yiisoft/yii2-apidoc cebe/markdown</code> if you want to avoid updating unrelated packages.</p>
+
+<h2><a id="user-content-usage" class="anchor" href="#usage" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Usage</h2>
+
+<p>This extension offers two commands:</p>
+
+<ul>
+<li><code>api</code> to generate class API documentation.</li>
+<li><code>guide</code> to render nice HTML pages from markdown files such as the yii guide.</li>
+</ul>
+
+<p>Simple usage for stand alone class documentation:</p>
+
+<pre><code>vendor/bin/apidoc api source/directory ./output
+</code></pre>
+
+<p>Simple usage for stand alone guide documentation:</p>
+
+<pre><code>vendor/bin/apidoc guide source/docs ./output
+</code></pre>
+
+<p>You can combine them to generate class API and guide documentation in one place:</p>
+
+<pre><code># generate API docs
+vendor/bin/apidoc api source/directory ./output
+# generate the guide (order is important to allow the guide to link to the apidoc)
+vendor/bin/apidoc guide source/docs ./output
+</code></pre>
+
+<p>By default the <code>bootstrap</code> template will be used. You can choose a different template with the <code>--template=name</code> parameter.
+Currently there is only the <code>bootstrap</code> template available.</p>
+
+<p>You may also add the <code>yii\apidoc\commands\ApiController</code> and <code>GuideController</code> to your console application command map
+and run them inside of your applications console app.</p>
+
+<h3><a id="user-content-advanced-usage" class="anchor" href="#advanced-usage" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Advanced usage</h3>
+
+<p>The following script can be used to generate API documentation and guide in different directories and also multiple guides
+in different languages (like it is done on yiiframework.com):</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c">#!/bin/sh</span>
+
+<span class="pl-c"># set these paths to match your environment</span>
+YII_PATH=<span class="pl-k">~</span>/dev/yiisoft/yii2
+APIDOC_PATH=<span class="pl-k">~</span>/dev/yiisoft/yii2/extensions/apidoc
+OUTPUT=yii2docs
+
+<span class="pl-c1">cd</span> <span class="pl-smi">$APIDOC_PATH</span>
+./apidoc api <span class="pl-smi">$YII_PATH</span>/framework/,<span class="pl-smi">$YII_PATH</span>/extensions <span class="pl-smi">$OUTPUT</span>/api --guide=../guide-en --guidePrefix= --interactive=0
+./apidoc guide <span class="pl-smi">$YII_PATH</span>/docs/guide    <span class="pl-smi">$OUTPUT</span>/guide-en --apiDocs=../api --guidePrefix= --interactive=0
+./apidoc guide <span class="pl-smi">$YII_PATH</span>/docs/guide-ru <span class="pl-smi">$OUTPUT</span>/guide-ru --apiDocs=../api --guidePrefix= --interactive=0
+<span class="pl-c"># repeat the last line for more languages</span></pre></div>
+
+<h3><a id="user-content-creating-a-pdf-of-the-guide" class="anchor" href="#creating-a-pdf-of-the-guide" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Creating a PDF of the guide</h3>
+
+<p>You need <code>pdflatex</code> and GNU <code>make</code> for this.</p>
+
+<pre><code>vendor/bin/apidoc guide source/docs ./output --template=pdf
+cd ./output
+make pdf
+</code></pre>
+
+<p>If all runs without errors the PDF will be <code>guide.pdf</code> in the <code>output</code> dir.</p>
+
+<a href="https://github.com/yiisoft/yii2-apidoc">For more information</a>

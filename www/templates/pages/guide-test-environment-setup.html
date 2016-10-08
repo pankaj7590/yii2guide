@@ -1,0 +1,36 @@
+
+        <h1>Testing environment setup <span id="testing-environment-setup"></span><a href="#testing-environment-setup" class="hashlink">&para;</a></h1><blockquote class="note"><p><strong>Note: </strong>This section is under development.</p>
+</blockquote>
+<p>Yii 2 has officially maintained integration with <a href="https://github.com/Codeception/Codeception"><code>Codeception</code></a> testing
+framework that allows you to create the following test types:</p>
+<ul>
+<li><a href="guide-test-unit.html">Unit testing</a> - verifies that a single unit of code is working as expected;</li>
+<li><a href="guide-test-functional.html">Functional testing</a> - verifies scenarios from a user's perspective via browser emulation;</li>
+<li><a href="guide-test-acceptance.html">Acceptance testing</a> - verifies scenarios from a user's perspective in a browser.</li>
+</ul>
+<p>Yii provides ready to use test sets for all three test types in both
+<a href="https://github.com/yiisoft/yii2-app-basic"><code>yii2-basic</code></a> and
+<a href="https://github.com/yiisoft/yii2-app-advanced"><code>yii2-advanced</code></a> project templates.</p>
+<p>In order to run tests you need to install <a href="https://github.com/Codeception/Codeception">Codeception</a>.
+You can install it either locally - for particular project only, or globally - for your development machine.</p>
+<p>For the local installation use following commands:</p>
+<pre><code class="hljs javascript">composer <span class="hljs-built_in">require</span> <span class="hljs-string">"codeception/codeception=2.1.*"</span>
+composer <span class="hljs-built_in">require</span> <span class="hljs-string">"codeception/specify=*"</span>
+composer <span class="hljs-built_in">require</span> <span class="hljs-string">"codeception/verify=*"</span>
+</code></pre>
+<p>For the global installation you will need to use <code>global</code> directive:</p>
+<pre><code class="hljs php">composer <span class="hljs-keyword">global</span> <span class="hljs-keyword">require</span> <span class="hljs-string">"codeception/codeception=2.1.*"</span>
+composer <span class="hljs-keyword">global</span> <span class="hljs-keyword">require</span> <span class="hljs-string">"codeception/specify=*"</span>
+composer <span class="hljs-keyword">global</span> <span class="hljs-keyword">require</span> <span class="hljs-string">"codeception/verify=*"</span>
+</code></pre>
+<p>If you've never used Composer for global packages before, run <code>composer global status</code>. It should output:</p>
+<pre><code class="hljs nginx"><span class="hljs-title">Changed</span> current directory to &lt;directory&gt;
+</code></pre>
+<p>Then add <code>&lt;directory&gt;/vendor/bin</code> to you <code>PATH</code> environment variable. Now we're able to use <code>codecept</code> from command
+line globally.</p>
+<blockquote class="note"><p><strong>Note: </strong>global installation allows you use Codeception for all projects you are working on your development machine and
+  allows running <code>codecept</code> shell command globally without specifying path. However, such approach may be inappropriate,
+  for example, if 2 different projects require different versions of Codeception installed.
+  For the simplicity all shell commands related to the tests running around this guide are written assuming Codeception
+  has been installed globally.</p>
+</blockquote>

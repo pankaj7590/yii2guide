@@ -1,0 +1,30 @@
+<h1>Page Caching <span id="page-caching"></span><a href="#page-caching" class="hashlink">&para;</a></h1><p>Page caching refers to caching the content of a whole page on the server-side. Later when the same page
+is requested again, its content will be served from the cache instead of regenerating it from scratch.</p>
+<p>Page caching is supported by <a href="yii-filters-pagecache.html">yii\filters\PageCache</a>, an <a href="guide-structure-filters.html">action filter</a>.
+It can be used like the following in a controller class:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">behaviors</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">return</span> [
+        [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\filters\PageCache'</span>,
+            <span class="hljs-string">'only'</span> =&gt; [<span class="hljs-string">'index'</span>],
+            <span class="hljs-string">'duration'</span> =&gt; <span class="hljs-number">60</span>,
+            <span class="hljs-string">'variations'</span> =&gt; [
+                \Yii::<span class="hljs-variable">$app</span>-&gt;language,
+            ],
+            <span class="hljs-string">'dependency'</span> =&gt; [
+                <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\caching\DbDependency'</span>,
+                <span class="hljs-string">'sql'</span> =&gt; <span class="hljs-string">'SELECT COUNT(*) FROM post'</span>,
+            ],
+        ],
+    ];
+}
+</code></pre>
+<p>The above code states that page caching should be used only for the <code>index</code> action. The page content should
+be cached for at most 60 seconds and should be variated by the current application language
+and the cached page should be invalidated if the total number of posts is changed.</p>
+<p>As you can see, page caching is very similar to <a href="guide-caching-fragment.html">fragment caching</a>. They both support options such
+as <code>duration</code>, <code>dependencies</code>, <code>variations</code>, and <code>enabled</code>. Their main difference is that page caching is
+implemented as an <a href="guide-structure-filters.html">action filter</a> while fragment caching a <a href="guide-structure-widgets.html">widget</a>.</p>
+<p>You can use <a href="guide-caching-fragment.html">fragment caching</a> as well as <a href="guide-caching-fragment.html#dynamic-content">dynamic content</a>
+together with page caching.</p>

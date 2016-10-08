@@ -1,0 +1,90 @@
+
+        <h1>Entry Scripts <span id="entry-scripts"></span><a href="#entry-scripts" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#web-applications">Web Applications</a></li>
+<li><a href="#console-applications">Console Applications</a></li>
+<li><a href="#defining-constants">Defining Constants</a></li></ol></div>
+<p>Entry scripts are the first step in the application bootstrapping process. An application (either
+Web application or console application) has a single entry script. End users make requests to
+entry scripts which instantiate application instances and forward the requests to them.</p>
+<p>Entry scripts for Web applications must be stored under Web accessible directories so that they
+can be accessed by end users. They are often named as <code>index.php</code>, but can also use any other names,
+provided Web servers can locate them.</p>
+<p>Entry scripts for console applications are usually stored under the <a href="guide-structure-applications.html">base path</a>
+of applications and are named as <code>yii</code> (with the <code>.php</code> suffix). They should be made executable
+so that users can run console applications through the command <code>./yii &lt;route&gt; [arguments] [options]</code>.</p>
+<p>Entry scripts mainly do the following work:</p>
+<ul>
+<li>Define global constants;</li>
+<li>Register <a href="https://getcomposer.org/doc/01-basic-usage.md#autoloading">Composer autoloader</a>;</li>
+<li>Include the <a href="yii.html">Yii</a> class file;</li>
+<li>Load application configuration;</li>
+<li>Create and configure an <a href="guide-structure-applications.html">application</a> instance;</li>
+<li>Call <a href="yii-base-application.html#run()-detail">yii\base\Application::run()</a> to process the incoming request.</li>
+</ul>
+<h2>Web Applications  <span id="web-applications"></span><a href="#web-applications" class="hashlink">&para;</a></h2><p>The following is the code in the entry script for the <a href="guide-start-installation.html">Basic Web Project Template</a>.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+defined(<span class="hljs-string">'YII_DEBUG'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_DEBUG'</span>, <span class="hljs-keyword">true</span>);
+defined(<span class="hljs-string">'YII_ENV'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_ENV'</span>, <span class="hljs-string">'dev'</span>);
+
+<span class="hljs-comment">// register Composer autoloader</span>
+<span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/../vendor/autoload.php'</span>);
+
+<span class="hljs-comment">// include Yii class file</span>
+<span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/../vendor/yiisoft/yii2/Yii.php'</span>);
+
+<span class="hljs-comment">// load application configuration</span>
+<span class="hljs-variable">$config</span> = <span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/../config/web.php'</span>);
+
+<span class="hljs-comment">// create, configure and run application</span>
+(<span class="hljs-keyword">new</span> yii\web\Application(<span class="hljs-variable">$config</span>))-&gt;run();
+</code></pre>
+<h2>Console Applications  <span id="console-applications"></span><a href="#console-applications" class="hashlink">&para;</a></h2><p>Similarly, the following is the code for the entry script of a console application:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">#!/usr/bin/env php</span>
+<span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-comment">/**
+ * Yii console bootstrap file.
+ *
+ * <span class="hljs-doctag">@link</span> http://www.yiiframework.com/
+ * <span class="hljs-doctag">@copyright</span> Copyright (c) 2008 Yii Software LLC
+ * <span class="hljs-doctag">@license</span> http://www.yiiframework.com/license/
+ */</span>
+
+defined(<span class="hljs-string">'YII_DEBUG'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_DEBUG'</span>, <span class="hljs-keyword">true</span>);
+defined(<span class="hljs-string">'YII_ENV'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_ENV'</span>, <span class="hljs-string">'dev'</span>);
+
+<span class="hljs-comment">// register Composer autoloader</span>
+<span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/vendor/autoload.php'</span>);
+
+<span class="hljs-comment">// include Yii class file</span>
+<span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/vendor/yiisoft/yii2/Yii.php'</span>);
+
+<span class="hljs-comment">// load application configuration</span>
+<span class="hljs-variable">$config</span> = <span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/config/console.php'</span>);
+
+<span class="hljs-variable">$application</span> = <span class="hljs-keyword">new</span> yii\console\Application(<span class="hljs-variable">$config</span>);
+<span class="hljs-variable">$exitCode</span> = <span class="hljs-variable">$application</span>-&gt;run();
+<span class="hljs-keyword">exit</span>(<span class="hljs-variable">$exitCode</span>);
+</code></pre>
+<h2>Defining Constants  <span id="defining-constants"></span><a href="#defining-constants" class="hashlink">&para;</a></h2><p>Entry scripts are the best place for defining global constants. Yii supports the following three constants:</p>
+<ul>
+<li><code>YII_DEBUG</code>: specifies whether the application is running in debug mode. When in debug mode, an application
+will keep more log information, and will reveal detailed error call stacks if exceptions are thrown. For this
+reason, debug mode should be used mainly during development. The default value of <code>YII_DEBUG</code> is <code>false</code>.</li>
+<li><code>YII_ENV</code>: specifies which environment the application is running in. This will be described in
+more detail in the <a href="guide-concept-configurations.html#environment-constants">Configurations</a> section.
+The default value of <code>YII_ENV</code> is <code>'prod'</code>, meaning the application is running in production environment.</li>
+<li><code>YII_ENABLE_ERROR_HANDLER</code>: specifies whether to enable the error handler provided by Yii. The default
+value of this constant is <code>true</code>.</li>
+</ul>
+<p>When defining a constant, we often use the code like the following:</p>
+<pre><code class="hljs php language-php">defined(<span class="hljs-string">'YII_DEBUG'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_DEBUG'</span>, <span class="hljs-keyword">true</span>);
+</code></pre>
+<p>which is equivalent to the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">if</span> (!defined(<span class="hljs-string">'YII_DEBUG'</span>)) {
+    define(<span class="hljs-string">'YII_DEBUG'</span>, <span class="hljs-keyword">true</span>);
+}
+</code></pre>
+<p>Clearly the former is more succinct and easier to understand.</p>
+<p>Constant definitions should be done at the very beginning of an entry script so that they can take effect
+when other PHP files are being included.</p>

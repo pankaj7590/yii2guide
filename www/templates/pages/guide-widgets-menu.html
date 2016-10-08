@@ -1,0 +1,22 @@
+<p><strong>Menu displays a multi-level menu using nested HTML lists.</strong></p>
+    <p>The main property of Menu is <a href="yii-widgets-menu.html#$items-detail">$items</a>, which specifies the possible items in the menu.
+A menu item can contain sub-items which specify the sub-menu under that menu item.</p>
+<p>Menu checks the current route and request parameters to toggle certain menu items
+with active state.</p>
+<p>Note that Menu only renders the HTML tags about the menu. It does do any styling.
+You are responsible to provide CSS styles to make it look like a real menu.</p>
+<p>The following example shows how to use Menu:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">echo</span> Menu::widget([
+    <span class="hljs-string">'items'</span> =&gt; [
+        <span class="hljs-comment">// Important: you need to specify url as 'controller/action',</span>
+        <span class="hljs-comment">// not just as 'controller' even if default action is used.</span>
+        [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Home'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'site/index'</span>]],
+        <span class="hljs-comment">// 'Products' menu item will be selected as long as the route is 'product/index'</span>
+        [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Products'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'product/index'</span>], <span class="hljs-string">'items'</span> =&gt; [
+            [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'New Arrivals'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'product/index'</span>, <span class="hljs-string">'tag'</span> =&gt; <span class="hljs-string">'new'</span>]],
+            [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Most Popular'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'product/index'</span>, <span class="hljs-string">'tag'</span> =&gt; <span class="hljs-string">'popular'</span>]],
+        ]],
+        [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Login'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'site/login'</span>], <span class="hljs-string">'visible'</span> =&gt; Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;isGuest],
+    ],
+]);
+</code></pre>

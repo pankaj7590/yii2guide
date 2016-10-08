@@ -1,0 +1,174 @@
+
+        <h1>Console applications <span id="console-applications"></span><a href="#console-applications" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#usage">Usage</a></li>
+<li><a href="#entry-script">The entry script</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#create-command">Creating your own console commands</a></li></ol></div>
+<p>Besides the rich features for building web applications, Yii also has full-featured support for console applications
+which are mainly used to create background and maintenance tasks that need to be performed for a website.</p>
+<p>The structure of console applications is very similar to a Yii web application. It consists of one
+or more <a href="yii-console-controller.html">yii\console\Controller</a> classes, which are often referred to as <em>commands</em> in the console environment.
+Each controller can also have one or more actions, just like web controllers.</p>
+<p>Both project templates already have a console application with them.
+You can run it by calling the <code>yii</code> script, which is located in the base directory of the repository. 
+This will give you a list of available commands when you run it without any further parameters:</p>
+<p><img src="images/tutorial-console-help.png" alt="Running ./yii command for help output" /></p>
+<p>As you can see in the screenshot, Yii has already defined a set of commands that are available by default:</p>
+<ul>
+<li><a href="yii-console-controllers-assetcontroller.html">AssetController</a> - Allows you to combine and compress your JavaScript and CSS files.
+You can learn more about this command in the <a href="guide-structure-assets.html#using-asset-bundles">Assets Section</a>.</li>
+<li><a href="yii-console-controllers-cachecontroller.html">CacheController</a> - Allows you to flush application caches.</li>
+<li><a href="yii-console-controllers-fixturecontroller.html">FixtureController</a> - Manages fixture data loading and unloading for testing purposes.
+This command is described in more detail in the <a href="guide-test-fixtures.html#managing-fixtures">Testing Section about Fixtures</a>.</li>
+<li><a href="yii-console-controllers-helpcontroller.html">HelpController</a> - Provides help information about console commands, this is the default command
+and prints what you have seen in the above output.</li>
+<li><a href="yii-console-controllers-messagecontroller.html">MessageController</a> - Extracts messages to be translated from source files.
+To learn more about this command, please refer to the <a href="guide-tutorial-i18n.html#message-command">I18N Section</a>.</li>
+<li><a href="yii-console-controllers-migratecontroller.html">MigrateController</a> - Manages application migrations.
+Database migrations are described in more detail in the <a href="guide-db-migrations.html">Database Migration Section</a>.</li>
+<li><a href="yii-console-controllers-servecontroller.html">ServeController</a> - Allows you run PHP built-in web server.</li>
+</ul>
+<h2>Usage  <span id="usage"></span><a href="#usage" class="hashlink">&para;</a></h2><p>You execute a console controller action using the following syntax:</p>
+<pre><code class="hljs apache"><span class="hljs-keyword">yii</span> &lt;route&gt;<span class="hljs-sqbracket"> [--option1=value1 --option2=value2 ... argument1 argument2 ...]</span>
+</code></pre>
+<p>In the above, <code>&lt;route&gt;</code> refers to the route to the controller action. The options will populate the class
+properties and arguments are the parameters of the action method.</p>
+<p>For example, the <a href="yii-console-controllers-basemigratecontroller.html#actionUp()-detail">MigrateController::actionUp()</a>
+with <a href="yii-console-controllers-migratecontroller.html#$migrationTable-detail">MigrateController::$migrationTable</a> set to <code>migrations</code>
+and a limit of 5 migrations can be called like so:</p>
+<pre><code class="hljs nginx"><span class="hljs-title">yii</span> migrate/up <span class="hljs-number">5</span> --migrationTable=migrations
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>When using <code>*</code> in console, don't forget to quote it as <code>"*"</code> in order to avoid executing it as a shell
+glob that will be replaced by all file names of the current directory.</p>
+</blockquote>
+<h2>The entry script  <span id="entry-script"></span><a href="#entry-script" class="hashlink">&para;</a></h2><p>The console application entry script is equivalent to the <code>index.php</code> bootstrap file used for the web application.
+The console entry script is typically called <code>yii</code>, and located in your application's root directory.
+It contains code like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">#!/usr/bin/env php</span>
+<span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-comment">/**
+ * Yii console bootstrap file.
+ */</span>
+
+defined(<span class="hljs-string">'YII_DEBUG'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_DEBUG'</span>, <span class="hljs-keyword">true</span>);
+defined(<span class="hljs-string">'YII_ENV'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_ENV'</span>, <span class="hljs-string">'dev'</span>);
+
+<span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/vendor/autoload.php'</span>);
+<span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/vendor/yiisoft/yii2/Yii.php'</span>);
+
+<span class="hljs-variable">$config</span> = <span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/config/console.php'</span>);
+
+<span class="hljs-variable">$application</span> = <span class="hljs-keyword">new</span> yii\console\Application(<span class="hljs-variable">$config</span>);
+<span class="hljs-variable">$exitCode</span> = <span class="hljs-variable">$application</span>-&gt;run();
+<span class="hljs-keyword">exit</span>(<span class="hljs-variable">$exitCode</span>);
+</code></pre>
+<p>This script will be created as part of your application; you're free to edit it to suit your needs. The <code>YII_DEBUG</code> constant can be set to <code>false</code> if you do
+not want to see a stack trace on error, and/or if you want to improve the overall performance. In both basic and advanced application
+templates, the console application entry script has debugging enabled by default to provide a more developer-friendly environment.</p>
+<h2>Configuration  <span id="configuration"></span><a href="#configuration" class="hashlink">&para;</a></h2><p>As can be seen in the code above, the console application uses its own configuration file, named <code>console.php</code>. In this file
+you should configure various <a href="guide-structure-application-components.html">application components</a> and properties for the console application in particular.</p>
+<p>If your web application and console application share a lot of configuration parameters and values, you may consider moving the common
+parts into a separate file, and including this file in both of the application configurations (web and console).
+You can see an example of this in the advanced project template.</p>
+<blockquote class="tip"><p><strong>Tip: </strong>Sometimes, you may want to run a console command using an application configuration that is different
+from the one specified in the entry script. For example, you may want to use the <code>yii migrate</code> command to
+upgrade your test databases, which are configured in each individual test suite. To change the configuration
+dynamically, simply specify a custom application configuration
+file via the <code>appconfig</code> option when executing the command:</p>
+<pre><code class="hljs nginx"><span class="hljs-title">yii</span> &lt;route&gt; --appconfig=path/to/config.php ...
+</code></pre>
+</blockquote>
+<h2>Creating your own console commands  <span id="create-command"></span><a href="#create-command" class="hashlink">&para;</a></h2><h3>Console Controller and Action <span id="console-controller-and-action"></span><a href="#console-controller-and-action" class="hashlink">&para;</a></h3><p>A console command is defined as a controller class extending from <a href="yii-console-controller.html">yii\console\Controller</a>. In the controller class,
+you define one or more actions that correspond to sub-commands of the controller. Within each action, you write code that implements the appropriate tasks for that particular sub-command.</p>
+<p>When running a command, you need to specify the route to the  controller action. For example,
+the route <code>migrate/create</code> invokes the sub-command that corresponds to the
+<a href="yii-console-controllers-basemigratecontroller.html#actionCreate()-detail">MigrateController::actionCreate()</a> action method.
+If a route offered during execution does not contain an action ID, the default action will be executed (as with a web controller).</p>
+<h3>Options <span id="options"></span><a href="#options" class="hashlink">&para;</a></h3><p>By overriding the <a href="yii-console-controller.html#options()-detail">yii\console\Controller::options()</a> method, you can specify options that are available
+to a console command (controller/actionID). The method should return a list of the controller class's public properties.
+When running a command, you may specify the value of an option using the syntax <code>--optionName=optionValue</code>.
+This will assign <code>optionValue</code> to the <code>optionName</code> property of the controller class.</p>
+<p>If the default value of an option is of an array type and you set this option while running the command,
+the option value will be converted into an array by splitting the input string on any commas.</p>
+<h3>Options Aliases <span id="options-aliases"></span><a href="#options-aliases" class="hashlink">&para;</a></h3><p>Since version 2.0.8 console command provides <a href="yii-console-controller.html#optionAliases()-detail">yii\console\Controller::optionAliases()</a> method to add
+aliases for options.</p>
+<p>To define an alias, override <a href="yii-console-controller.html#optionAliases()-detail">yii\console\Controller::optionAliases()</a> in your controller, for example:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">commands</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">console</span>\<span class="hljs-title">Controller</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$message</span>;
+    
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">options</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [<span class="hljs-string">'message'</span>];
+    }
+    
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">optionAliases</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [<span class="hljs-string">'m'</span> =&gt; <span class="hljs-string">'message'</span>];
+    }
+    
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionIndex</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">echo</span> <span class="hljs-variable">$this</span>-&gt;message . <span class="hljs-string">"\n"</span>;
+    }
+}
+</code></pre>
+<p>Now, you can use the following syntax to run the command:</p>
+<pre><code class="hljs nginx"><span class="hljs-title">yii</span> hello -m=hello
+</code></pre>
+<h3>Arguments <span id="arguments"></span><a href="#arguments" class="hashlink">&para;</a></h3><p>Besides options, a command can also receive arguments. The arguments will be passed as the parameters to the action
+method corresponding to the requested sub-command. The first argument corresponds to the first parameter, the second
+corresponds to the second, and so on. If not enough arguments are provided when the command is called, the corresponding parameters
+will take the declared default values, if defined. If no default value is set, and no value is provided at runtime, the command will exit with an error.</p>
+<p>You may use the <code>array</code> type hint to indicate that an argument should be treated as an array. The array will be generated
+by splitting the input string on commas.</p>
+<p>The following example shows how to declare arguments:</p>
+<pre><code class="hljs php language-php"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ExampleController</span> <span class="hljs-keyword">extends</span> \<span class="hljs-title">yii</span>\<span class="hljs-title">console</span>\<span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-comment">// The command "yii example/create test" will call "actionCreate('test')"</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionCreate</span><span class="hljs-params">(<span class="hljs-variable">$name</span>)</span> </span>{ ... }
+
+    <span class="hljs-comment">// The command "yii example/index city" will call "actionIndex('city', 'name')"</span>
+    <span class="hljs-comment">// The command "yii example/index city id" will call "actionIndex('city', 'id')"</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionIndex</span><span class="hljs-params">(<span class="hljs-variable">$category</span>, <span class="hljs-variable">$order</span> = <span class="hljs-string">'name'</span>)</span> </span>{ ... }
+
+    <span class="hljs-comment">// The command "yii example/add test" will call "actionAdd(['test'])"</span>
+    <span class="hljs-comment">// The command "yii example/add test1,test2" will call "actionAdd(['test1', 'test2'])"</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionAdd</span><span class="hljs-params">(array <span class="hljs-variable">$name</span>)</span> </span>{ ... }
+}
+</code></pre>
+<h3>Exit Code <span id="exit-code"></span><a href="#exit-code" class="hashlink">&para;</a></h3><p>Using exit codes is a best practice for console application development. Conventionally, a command returns <code>0</code> to indicate that
+everything is OK. If the command returns a number greater than zero, that's considered to be indicative of an error. The number returned will be the error
+code, potentially usable to find out details about the error.
+For example <code>1</code> could stand generally for an unknown error and all codes above would be reserved for specific cases: input errors, missing files, and so forth.</p>
+<p>To have your console command return an exit code, simply return an integer in the controller action
+method:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionIndex</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">if</span> (<span class="hljs-comment">/* some problem */</span>) {
+        <span class="hljs-keyword">echo</span> <span class="hljs-string">"A problem occurred!\n"</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+    }
+    <span class="hljs-comment">// do something</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</code></pre>
+<p>There are some predefined constants you can use:</p>
+<ul>
+<li><a href="yii-console-controller.html#EXIT_CODE_NORMAL-detail">Controller::EXIT_CODE_NORMAL</a> with value of <code>0</code>;</li>
+<li><a href="yii-console-controller.html#EXIT_CODE_ERROR-detail">Controller::EXIT_CODE_ERROR</a> with value of <code>1</code>.</li>
+</ul>
+<p>It's a good practice to define meaningful constants for your controller in case you have more error code types.</p>
+<h3>Formatting and colors <span id="formatting-and-colors"></span><a href="#formatting-and-colors" class="hashlink">&para;</a></h3><p>Yii console supports formatted output that is automatically degraded to non-formatted one if it's not supported
+by terminal running the command.</p>
+<p>Outputting formatted strings is simple. Here's how to output some bold text:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$this</span>-&gt;stdout(<span class="hljs-string">"Hello?\n"</span>, Console::BOLD);
+</code></pre>
+<p>If you need to build string dynamically combining multiple styles it's better to use <a href="yii-helpers-baseconsole.html#ansiFormat()-detail">ansiFormat()</a>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$name</span> = <span class="hljs-variable">$this</span>-&gt;ansiFormat(<span class="hljs-string">'Alex'</span>, Console::FG_YELLOW);
+<span class="hljs-keyword">echo</span> <span class="hljs-string">"Hello, my name is $name."</span>;
+</code></pre>

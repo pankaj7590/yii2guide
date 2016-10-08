@@ -1,0 +1,92 @@
+
+        <h1>Versioning <span id="versioning"></span><a href="#versioning" class="hashlink">&para;</a></h1><p>A good API is <em>versioned</em>: changes and new features are implemented in new versions of the API instead of continually altering just one version. Unlike Web applications, with which you have full control of both the client-side and server-side
+code, APIs are meant to be used by clients beyond your control. For this reason, backward
+compatibility (BC) of the APIs should be maintained whenever possible. If a change that may break BC is necessary, you should introduce it in new version of the API, and bump up the version number. Existing clients can continue to use the old, working version of the API; and new or upgraded clients can get the new functionality in the new API version. </p>
+<blockquote class="tip"><p><strong>Tip: </strong>Refer to <a href="http://semver.org/">Semantic Versioning</a>
+for more information on designing API version numbers.</p>
+</blockquote>
+<p>One common way to implement API versioning is to embed the version number in the API URLs.
+For example, <code>http://example.com/v1/users</code> stands for the <code>/users</code> endpoint of API version 1. </p>
+<p>Another method of API versioning,
+which has gained momentum recently, is to put the version number in the HTTP request headers. This is typically done through the <code>Accept</code> header:</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// via a parameter</span>
+Accept: application/json; version=v1
+<span class="hljs-comment">// via a vendor content type</span>
+Accept: application/vnd.company.myapp-v1+json
+</code></pre>
+<p>Both methods have their pros and cons, and there are a lot of debates about each approach. Below you'll see a practical strategy
+for API versioning that is a mix of these two methods:</p>
+<ul>
+<li>Put each major version of API implementation in a separate module whose ID is the major version number (e.g. <code>v1</code>, <code>v2</code>).
+Naturally, the API URLs will contain major version numbers.</li>
+<li>Within each major version (and thus within the corresponding module), use the <code>Accept</code> HTTP request header
+to determine the minor version number and write conditional code to respond to the minor versions accordingly.</li>
+</ul>
+<p>For each module serving a major version, the module should include the resource and controller classes
+serving that specific version. To better separate code responsibility, you may keep a common set of
+base resource and controller classes, and subclass them in each individual version module. Within the subclasses,
+implement the concrete code such as <code>Model::fields()</code>.</p>
+<p>Your code may be organized like the following:</p>
+<pre><code class="hljs dockerfile">api/
+    common/
+        controllers/
+            UserController.php
+            PostController.php
+        models/
+            <span class="hljs-built_ins">User</span>.php
+            Post.php
+    modules/
+        v1/
+            controllers/
+                UserController.php
+                PostController.php
+            models/
+                <span class="hljs-built_ins">User</span>.php
+                Post.php
+            Module.php
+        v2/
+            controllers/
+                UserController.php
+                PostController.php
+            models/
+                <span class="hljs-built_ins">User</span>.php
+                Post.php
+            Module.php
+</code></pre>
+<p>Your application configuration would look like:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'modules'</span> =&gt; [
+        <span class="hljs-string">'v1'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'app\modules\v1\Module'</span>,
+        ],
+        <span class="hljs-string">'v2'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'app\modules\v2\Module'</span>,
+        ],
+    ],
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'urlManager'</span> =&gt; [
+            <span class="hljs-string">'enablePrettyUrl'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'enableStrictParsing'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'showScriptName'</span> =&gt; <span class="hljs-keyword">false</span>,
+            <span class="hljs-string">'rules'</span> =&gt; [
+                [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\rest\UrlRule'</span>, <span class="hljs-string">'controller'</span> =&gt; [<span class="hljs-string">'v1/user'</span>, <span class="hljs-string">'v1/post'</span>]],
+                [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\rest\UrlRule'</span>, <span class="hljs-string">'controller'</span> =&gt; [<span class="hljs-string">'v2/user'</span>, <span class="hljs-string">'v2/post'</span>]],
+            ],
+        ],
+    ],
+];
+</code></pre>
+<p>As a result of the above code, <code>http://example.com/v1/users</code> will return the list of users in version 1, while
+<code>http://example.com/v2/users</code> will return version 2 users.</p>
+<p>Thanks to modules, the code for different major versions can be well isolated. But modules make it still possible
+to reuse code across the modules via common base classes and other shared resources.</p>
+<p>To deal with minor version numbers, you may take advantage of the content negotiation
+feature provided by the <a href="yii-filters-contentnegotiator.html">contentNegotiator</a> behavior. The <code>contentNegotiator</code>
+behavior will set the <a href="yii-web-response.html#$acceptParams-detail">yii\web\Response::$acceptParams</a> property when it determines which
+content type to support.</p>
+<p>For example, if a request is sent with the HTTP header <code>Accept: application/json; version=v1</code>,
+after content negotiation, <a href="yii-web-response.html#$acceptParams-detail">yii\web\Response::$acceptParams</a> will contain the value <code>['version' =&gt; 'v1']</code>.</p>
+<p>Based on the version information in <code>acceptParams</code>, you may write conditional code in places
+such as actions, resource classes, serializers, etc. to provide the appropriate functionality.</p>
+<p>Since minor versions by definition require maintaining backward compatibility, hopefully there would not be many
+version checks in your code. Otherwise, chances are that you may need to create a new major version.</p>

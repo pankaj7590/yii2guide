@@ -1,0 +1,16 @@
+<p><strong>The GridView widget is used to display data in a grid.</strong></p>
+    <p>It provides features like <a href="yii-widgets-baselistview.html#$sorter-detail">sorting</a>, <a href="yii-widgets-baselistview.html#$pager-detail">paging</a> and also <a href="yii-grid-gridview.html#$filterModel-detail">filtering</a> the data.</p>
+<p>A basic usage looks like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?</span>= GridView::widget([
+    <span class="hljs-string">'dataProvider'</span> =&gt; <span class="hljs-variable">$dataProvider</span>,
+    <span class="hljs-string">'columns'</span> =&gt; [
+        <span class="hljs-string">'id'</span>,
+        <span class="hljs-string">'name'</span>,
+        <span class="hljs-string">'created_at:datetime'</span>,
+        <span class="hljs-comment">// ...</span>
+    ],
+]) <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<p>The columns of the grid table are configured in terms of <a href="yii-grid-column.html">yii\grid\Column</a> classes,
+which are configured via <a href="yii-grid-gridview.html#$columns-detail">$columns</a>.</p>
+<p>The look and feel of a grid view can be customized using the large amount of properties.</p>

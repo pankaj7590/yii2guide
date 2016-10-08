@@ -1,0 +1,270 @@
+
+        <h1>Sessions and Cookies <span id="sessions-and-cookies"></span><a href="#sessions-and-cookies" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#sessions">Sessions</a></li>
+<li><a href="#cookies">Cookies</a></li></ol></div>
+<p>Sessions and cookies allow data to be persisted across multiple user requests. In plain PHP you may access them
+through the global variables <code>$_SESSION</code> and <code>$_COOKIE</code>, respectively. Yii encapsulates sessions and cookies as objects
+and thus allows you to access them in an object-oriented fashion with additional useful enhancements.</p>
+<h2>Sessions  <span id="sessions"></span><a href="#sessions" class="hashlink">&para;</a></h2><p>Like <a href="guide-runtime-requests.html">requests</a> and <a href="guide-runtime-responses.html">responses</a>, you can get access to sessions via
+the <code>session</code> <a href="guide-structure-application-components.html">application component</a> which is an instance of <a href="yii-web-session.html">yii\web\Session</a>,
+by default.</p>
+<h3>Opening and Closing Sessions  <span id="opening-closing-sessions"></span><a href="#opening-closing-sessions" class="hashlink">&para;</a></h3><p>To open and close a session, you can do the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$session</span> = Yii::<span class="hljs-variable">$app</span>-&gt;session;
+
+<span class="hljs-comment">// check if a session is already open</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$session</span>-&gt;isActive) ...
+
+<span class="hljs-comment">// open a session</span>
+<span class="hljs-variable">$session</span>-&gt;open();
+
+<span class="hljs-comment">// close a session</span>
+<span class="hljs-variable">$session</span>-&gt;close();
+
+<span class="hljs-comment">// destroys all data registered to a session.</span>
+<span class="hljs-variable">$session</span>-&gt;destroy();
+</code></pre>
+<p>You can call <a href="yii-web-session.html#open()-detail">open()</a> and <a href="yii-web-session.html#close()-detail">close()</a> multiple times
+without causing errors; internally the methods will first check if the session is already open.</p>
+<h3>Accessing Session Data  <span id="access-session-data"></span><a href="#access-session-data" class="hashlink">&para;</a></h3><p>To access the data stored in session, you can do the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$session</span> = Yii::<span class="hljs-variable">$app</span>-&gt;session;
+
+<span class="hljs-comment">// get a session variable. The following usages are equivalent:</span>
+<span class="hljs-variable">$language</span> = <span class="hljs-variable">$session</span>-&gt;get(<span class="hljs-string">'language'</span>);
+<span class="hljs-variable">$language</span> = <span class="hljs-variable">$session</span>[<span class="hljs-string">'language'</span>];
+<span class="hljs-variable">$language</span> = <span class="hljs-keyword">isset</span>(<span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'language'</span>]) ? <span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'language'</span>] : <span class="hljs-keyword">null</span>;
+
+<span class="hljs-comment">// set a session variable. The following usages are equivalent:</span>
+<span class="hljs-variable">$session</span>-&gt;set(<span class="hljs-string">'language'</span>, <span class="hljs-string">'en-US'</span>);
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'language'</span>] = <span class="hljs-string">'en-US'</span>;
+<span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'language'</span>] = <span class="hljs-string">'en-US'</span>;
+
+<span class="hljs-comment">// remove a session variable. The following usages are equivalent:</span>
+<span class="hljs-variable">$session</span>-&gt;remove(<span class="hljs-string">'language'</span>);
+<span class="hljs-keyword">unset</span>(<span class="hljs-variable">$session</span>[<span class="hljs-string">'language'</span>]);
+<span class="hljs-keyword">unset</span>(<span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'language'</span>]);
+
+<span class="hljs-comment">// check if a session variable exists. The following usages are equivalent:</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$session</span>-&gt;has(<span class="hljs-string">'language'</span>)) ...
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$session</span>[<span class="hljs-string">'language'</span>])) ...
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'language'</span>])) ...
+
+<span class="hljs-comment">// traverse all session variables. The following usages are equivalent:</span>
+<span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$session</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$name</span> =&gt; <span class="hljs-variable">$value</span>) ...
+<span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$_SESSION</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$name</span> =&gt; <span class="hljs-variable">$value</span>) ...
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>When you access session data through the <code>session</code> component, a session will be automatically opened
+if it has not been done so before. This is different from accessing session data through <code>$_SESSION</code>, which requires
+an explicit call of <code>session_start()</code>.</p>
+</blockquote>
+<p>When working with session data that are arrays, the <code>session</code> component has a limitation which prevents you from
+directly modifying an array element. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$session</span> = Yii::<span class="hljs-variable">$app</span>-&gt;session;
+
+<span class="hljs-comment">// the following code will NOT work</span>
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'number'</span>] = <span class="hljs-number">5</span>;
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'lifetime'</span>] = <span class="hljs-number">3600</span>;
+
+<span class="hljs-comment">// the following code works:</span>
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>] = [
+    <span class="hljs-string">'number'</span> =&gt; <span class="hljs-number">5</span>,
+    <span class="hljs-string">'lifetime'</span> =&gt; <span class="hljs-number">3600</span>,
+];
+
+<span class="hljs-comment">// the following code also works:</span>
+<span class="hljs-keyword">echo</span> <span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'lifetime'</span>];
+</code></pre>
+<p>You can use one of the following workarounds to solve this problem:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$session</span> = Yii::<span class="hljs-variable">$app</span>-&gt;session;
+
+<span class="hljs-comment">// directly use $_SESSION (make sure Yii::$app-&gt;session-&gt;open() has been called)</span>
+<span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'number'</span>] = <span class="hljs-number">5</span>;
+<span class="hljs-variable">$_SESSION</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'lifetime'</span>] = <span class="hljs-number">3600</span>;
+
+<span class="hljs-comment">// get the whole array first, modify it and then save it back</span>
+<span class="hljs-variable">$captcha</span> = <span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>];
+<span class="hljs-variable">$captcha</span>[<span class="hljs-string">'number'</span>] = <span class="hljs-number">5</span>;
+<span class="hljs-variable">$captcha</span>[<span class="hljs-string">'lifetime'</span>] = <span class="hljs-number">3600</span>;
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>] = <span class="hljs-variable">$captcha</span>;
+
+<span class="hljs-comment">// use ArrayObject instead of array</span>
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>] = <span class="hljs-keyword">new</span> \ArrayObject;
+...
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'number'</span>] = <span class="hljs-number">5</span>;
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha'</span>][<span class="hljs-string">'lifetime'</span>] = <span class="hljs-number">3600</span>;
+
+<span class="hljs-comment">// store array data by keys with a common prefix</span>
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha.number'</span>] = <span class="hljs-number">5</span>;
+<span class="hljs-variable">$session</span>[<span class="hljs-string">'captcha.lifetime'</span>] = <span class="hljs-number">3600</span>;
+</code></pre>
+<p>For better performance and code readability, we recommend the last workaround. That is, instead of storing
+an array as a single session variable, you store each array element as a session variable which shares the same
+key prefix with other array elements.</p>
+<h3>Custom Session Storage  <span id="custom-session-storage"></span><a href="#custom-session-storage" class="hashlink">&para;</a></h3><p>The default <a href="yii-web-session.html">yii\web\Session</a> class stores session data as files on the server. Yii also provides the following
+session classes implementing different session storage:</p>
+<ul>
+<li><a href="yii-web-dbsession.html">yii\web\DbSession</a>: stores session data in a database table.</li>
+<li><a href="yii-web-cachesession.html">yii\web\CacheSession</a>: stores session data in a cache with the help of a configured <a href="guide-caching-data.html#cache-components">cache component</a>.</li>
+<li><a href="yii-redis-session.html">yii\redis\Session</a>: stores session data using <a href="http://redis.io/">redis</a> as the storage medium.</li>
+<li><a href="yii-mongodb-session.html">yii\mongodb\Session</a>: stores session data in a <a href="http://www.mongodb.org/">MongoDB</a>.</li>
+</ul>
+<p>All these session classes support the same set of API methods. As a result, you can switch to a different
+session storage class without the need to modify your application code that uses sessions.</p>
+<blockquote class="note"><p><strong>Note: </strong>If you want to access session data via <code>$_SESSION</code> while using custom session storage, you must make
+  sure that the session has already been started by <a href="yii-web-session.html#open()-detail">yii\web\Session::open()</a>. This is because custom session storage
+  handlers are registered within this method.</p>
+</blockquote>
+<p>To learn how to configure and use these component classes, please refer to their API documentation. Below is
+an example showing how to configure <a href="yii-web-dbsession.html">yii\web\DbSession</a> in the application configuration to use a database table
+for session storage:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'session'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\web\DbSession'</span>,
+            <span class="hljs-comment">// 'db' =&gt; 'mydb',  // the application component ID of the DB connection. Defaults to 'db'.</span>
+            <span class="hljs-comment">// 'sessionTable' =&gt; 'my_session', // session table name. Defaults to 'session'.</span>
+        ],
+    ],
+];
+</code></pre>
+<p>You also need to create the following database table to store session data:</p>
+<pre><code class="hljs sql language-sql"><span class="hljs-operator"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">session</span>
+(
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">CHAR</span>(<span class="hljs-number">40</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-keyword">expire</span> <span class="hljs-built_in">INTEGER</span>,
+    <span class="hljs-keyword">data</span> <span class="hljs-built_in">BLOB</span>
+)
+</span></code></pre>
+<p>where 'BLOB' refers to the BLOB-type of your preferred DBMS. Below are the BLOB types that can be used for some popular DBMS:</p>
+<ul>
+<li>MySQL: LONGBLOB</li>
+<li>PostgreSQL: BYTEA</li>
+<li>MSSQL: BLOB</li>
+</ul>
+<blockquote class="note"><p><strong>Note: </strong>According to the php.ini setting of <code>session.hash_function</code>, you may need to adjust
+  the length of the <code>id</code> column. For example, if <code>session.hash_function=sha256</code>, you should use a
+  length 64 instead of 40.</p>
+</blockquote>
+<h3>Flash Data  <span id="flash-data"></span><a href="#flash-data" class="hashlink">&para;</a></h3><p>Flash data is a special kind of session data which, once set in one request, will only be available during
+the next request and will be automatically deleted afterwards. Flash data is most commonly used to implement
+messages that should only be displayed to end users once, such as a confirmation message displayed after
+a user successfully submits a form.</p>
+<p>You can set and access flash data through the <code>session</code> application component. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$session</span> = Yii::<span class="hljs-variable">$app</span>-&gt;session;
+
+<span class="hljs-comment">// Request #1</span>
+<span class="hljs-comment">// set a flash message named as "postDeleted"</span>
+<span class="hljs-variable">$session</span>-&gt;setFlash(<span class="hljs-string">'postDeleted'</span>, <span class="hljs-string">'You have successfully deleted your post.'</span>);
+
+<span class="hljs-comment">// Request #2</span>
+<span class="hljs-comment">// display the flash message named "postDeleted"</span>
+<span class="hljs-keyword">echo</span> <span class="hljs-variable">$session</span>-&gt;getFlash(<span class="hljs-string">'postDeleted'</span>);
+
+<span class="hljs-comment">// Request #3</span>
+<span class="hljs-comment">// $result will be `false` since the flash message was automatically deleted</span>
+<span class="hljs-variable">$result</span> = <span class="hljs-variable">$session</span>-&gt;hasFlash(<span class="hljs-string">'postDeleted'</span>);
+</code></pre>
+<p>Like regular session data, you can store arbitrary data as flash data.</p>
+<p>When you call <a href="yii-web-session.html#setFlash()-detail">yii\web\Session::setFlash()</a>, it will overwrite any existing flash data that has the same name.
+To append new flash data to an existing message of the same name, you may call <a href="yii-web-session.html#addFlash()-detail">yii\web\Session::addFlash()</a> instead.
+For example:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$session</span> = Yii::<span class="hljs-variable">$app</span>-&gt;session;
+
+<span class="hljs-comment">// Request #1</span>
+<span class="hljs-comment">// add a few flash messages under the name of "alerts"</span>
+<span class="hljs-variable">$session</span>-&gt;addFlash(<span class="hljs-string">'alerts'</span>, <span class="hljs-string">'You have successfully deleted your post.'</span>);
+<span class="hljs-variable">$session</span>-&gt;addFlash(<span class="hljs-string">'alerts'</span>, <span class="hljs-string">'You have successfully added a new friend.'</span>);
+<span class="hljs-variable">$session</span>-&gt;addFlash(<span class="hljs-string">'alerts'</span>, <span class="hljs-string">'You are promoted.'</span>);
+
+<span class="hljs-comment">// Request #2</span>
+<span class="hljs-comment">// $alerts is an array of the flash messages under the name of "alerts"</span>
+<span class="hljs-variable">$alerts</span> = <span class="hljs-variable">$session</span>-&gt;getFlash(<span class="hljs-string">'alerts'</span>);
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>Try not to use <a href="yii-web-session.html#setFlash()-detail">yii\web\Session::setFlash()</a> together with <a href="yii-web-session.html#addFlash()-detail">yii\web\Session::addFlash()</a> for flash data
+  of the same name. This is because the latter method will automatically turn the flash data into an array so that it
+  can append new flash data of the same name. As a result, when you call <a href="yii-web-session.html#getFlash()-detail">yii\web\Session::getFlash()</a>, you may
+  find sometimes you are getting an array while sometimes you are getting a string, depending on the order of
+  the invocation of these two methods.</p>
+</blockquote>
+<blockquote class="tip"><p><strong>Tip: </strong>For displaying Flash messages you can use <a href="yii-bootstrap-alert.html">bootstrap Alert</a> widget in the following way:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">echo</span> Alert::widget([
+   <span class="hljs-string">'options'</span> =&gt; [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'alert-info'</span>],
+   <span class="hljs-string">'body'</span> =&gt; Yii::<span class="hljs-variable">$app</span>-&gt;session-&gt;getFlash(<span class="hljs-string">'postDeleted'</span>),
+]);
+</code></pre>
+</blockquote>
+<h2>Cookies  <span id="cookies"></span><a href="#cookies" class="hashlink">&para;</a></h2><p>Yii represents each cookie as an object of <a href="yii-web-cookie.html">yii\web\Cookie</a>. Both <a href="yii-web-request.html">yii\web\Request</a> and <a href="yii-web-response.html">yii\web\Response</a>
+maintain a collection of cookies via the property named <code>cookies</code>. The cookie collection in the former represents
+the cookies submitted in a request, while the cookie collection in the latter represents the cookies that are to
+be sent to the user.</p>
+<p>The part of the application dealing with request and response directly is controller. Therefore, cookies should be
+read and sent in controller.</p>
+<h3>Reading Cookies  <span id="reading-cookies"></span><a href="#reading-cookies" class="hashlink">&para;</a></h3><p>You can get the cookies in the current request using the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// get the cookie collection (yii\web\CookieCollection) from the "request" component</span>
+<span class="hljs-variable">$cookies</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;cookies;
+
+<span class="hljs-comment">// get the "language" cookie value. If the cookie does not exist, return "en" as the default value.</span>
+<span class="hljs-variable">$language</span> = <span class="hljs-variable">$cookies</span>-&gt;getValue(<span class="hljs-string">'language'</span>, <span class="hljs-string">'en'</span>);
+
+<span class="hljs-comment">// an alternative way of getting the "language" cookie value</span>
+<span class="hljs-keyword">if</span> ((<span class="hljs-variable">$cookie</span> = <span class="hljs-variable">$cookies</span>-&gt;get(<span class="hljs-string">'language'</span>)) !== <span class="hljs-keyword">null</span>) {
+    <span class="hljs-variable">$language</span> = <span class="hljs-variable">$cookie</span>-&gt;value;
+}
+
+<span class="hljs-comment">// you may also use $cookies like an array</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$cookies</span>[<span class="hljs-string">'language'</span>])) {
+    <span class="hljs-variable">$language</span> = <span class="hljs-variable">$cookies</span>[<span class="hljs-string">'language'</span>]-&gt;value;
+}
+
+<span class="hljs-comment">// check if there is a "language" cookie</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$cookies</span>-&gt;has(<span class="hljs-string">'language'</span>)) ...
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$cookies</span>[<span class="hljs-string">'language'</span>])) ...
+</code></pre>
+<h3>Sending Cookies  <span id="sending-cookies"></span><a href="#sending-cookies" class="hashlink">&para;</a></h3><p>You can send cookies to end users using the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// get the cookie collection (yii\web\CookieCollection) from the "response" component</span>
+<span class="hljs-variable">$cookies</span> = Yii::<span class="hljs-variable">$app</span>-&gt;response-&gt;cookies;
+
+<span class="hljs-comment">// add a new cookie to the response to be sent</span>
+<span class="hljs-variable">$cookies</span>-&gt;add(<span class="hljs-keyword">new</span> \yii\web\Cookie([
+    <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'language'</span>,
+    <span class="hljs-string">'value'</span> =&gt; <span class="hljs-string">'zh-CN'</span>,
+]));
+
+<span class="hljs-comment">// remove a cookie</span>
+<span class="hljs-variable">$cookies</span>-&gt;remove(<span class="hljs-string">'language'</span>);
+<span class="hljs-comment">// equivalent to the following</span>
+<span class="hljs-keyword">unset</span>(<span class="hljs-variable">$cookies</span>[<span class="hljs-string">'language'</span>]);
+</code></pre>
+<p>Besides the <a href="yii-web-cookie.html#$name-detail">name</a>, <a href="yii-web-cookie.html#$value-detail">value</a> properties shown in the above
+examples, the <a href="yii-web-cookie.html">yii\web\Cookie</a> class also defines other properties to fully represent all available cookie 
+information, such as <a href="yii-web-cookie.html#$domain-detail">domain</a>, <a href="yii-web-cookie.html#$expire-detail">expire</a>. You may configure these
+properties as needed to prepare a cookie and then add it to the response's cookie collection.</p>
+<blockquote class="note"><p><strong>Note: </strong>For better security, the default value of <a href="yii-web-cookie.html#$httpOnly-detail">yii\web\Cookie::$httpOnly</a> is set to <code>true</code>. This helps mitigate
+the risk of a client-side script accessing the protected cookie (if the browser supports it). You may read
+the <a href="https://www.owasp.org/index.php/HttpOnly">httpOnly wiki article</a> for more details.</p>
+</blockquote>
+<h3>Cookie Validation  <span id="cookie-validation"></span><a href="#cookie-validation" class="hashlink">&para;</a></h3><p>When you are reading and sending cookies through the <code>request</code> and <code>response</code> components as shown in the last
+two subsections, you enjoy the added security of cookie validation which protects cookies from being modified
+on the client-side. This is achieved by signing each cookie with a hash string, which allows the application to
+tell if a cookie has been modified on the client-side. If so, the cookie will NOT be accessible through the
+<a href="yii-web-request.html#$cookies-detail">cookie collection</a> of the <code>request</code> component.</p>
+<blockquote class="note"><p><strong>Note: </strong>Cookie validation only protects cookie values from being modified. If a cookie fails the validation, 
+you may still access it through <code>$_COOKIE</code>. This is because third-party libraries may manipulate cookies 
+in their own way, which does not involve cookie validation.</p>
+</blockquote>
+<p>Cookie validation is enabled by default. You can disable it by setting the <a href="yii-web-request.html#$enableCookieValidation-detail">yii\web\Request::$enableCookieValidation</a>
+property to be <code>false</code>, although we strongly recommend you do not do so.</p>
+<blockquote class="note"><p><strong>Note: </strong>Cookies that are directly read/sent via <code>$_COOKIE</code> and <code>setcookie()</code> will NOT be validated.</p>
+</blockquote>
+<p>When using cookie validation, you must specify a <a href="yii-web-request.html#$cookieValidationKey-detail">yii\web\Request::$cookieValidationKey</a> that will be used to generate
+the aforementioned hash strings. You can do so by configuring the <code>request</code> component in the application configuration:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'request'</span> =&gt; [
+            <span class="hljs-string">'cookieValidationKey'</span> =&gt; <span class="hljs-string">'fill in a secret key here'</span>,
+        ],
+    ],
+];
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong><a href="yii-web-request.html#$cookieValidationKey-detail">cookieValidationKey</a> is critical to your application's security.
+  It should only be known to people you trust. Do not store it in the version control system.</p>
+</blockquote>

@@ -1,0 +1,41 @@
+
+        <h1>Using template engines <span id="using-template-engines"></span><a href="#using-template-engines" class="hashlink">&para;</a></h1><p>By default, Yii uses PHP as its template language, but you can configure Yii to support other rendering engines, such as
+<a href="http://twig.sensiolabs.org/">Twig</a> or <a href="http://www.smarty.net/">Smarty</a> available as extensions.</p>
+<p>The <code>view</code> component is responsible for rendering views. You can add a custom template engine by reconfiguring this
+component's behavior:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'view'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\web\View'</span>,
+            <span class="hljs-string">'renderers'</span> =&gt; [
+                <span class="hljs-string">'tpl'</span> =&gt; [
+                    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\smarty\ViewRenderer'</span>,
+                    <span class="hljs-comment">//'cachePath' =&gt; '@runtime/Smarty/cache',</span>
+                ],
+                <span class="hljs-string">'twig'</span> =&gt; [
+                    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\twig\ViewRenderer'</span>,
+                    <span class="hljs-string">'cachePath'</span> =&gt; <span class="hljs-string">'@runtime/Twig/cache'</span>,
+                    <span class="hljs-comment">// Array of twig options:</span>
+                    <span class="hljs-string">'options'</span> =&gt; [
+                        <span class="hljs-string">'auto_reload'</span> =&gt; <span class="hljs-keyword">true</span>,
+                    ],
+                    <span class="hljs-string">'globals'</span> =&gt; [<span class="hljs-string">'html'</span> =&gt; <span class="hljs-string">'\yii\helpers\Html'</span>],
+                    <span class="hljs-string">'uses'</span> =&gt; [<span class="hljs-string">'yii\bootstrap'</span>],
+                ],
+                <span class="hljs-comment">// ...</span>
+            ],
+        ],
+    ],
+]
+</code></pre>
+<p>In the code above, both Smarty and Twig are configured to be useable by the view files. But in order to get these extensions into your project, you need to also modify
+your <code>composer.json</code> file to include them, too:</p>
+<pre><code class="hljs bash"><span class="hljs-string">"yiisoft/yii2-smarty"</span>: <span class="hljs-string">"~2.0.0"</span>,
+<span class="hljs-string">"yiisoft/yii2-twig"</span>: <span class="hljs-string">"~2.0.0"</span>,
+</code></pre>
+<p>That code would be added to the <code>require</code> section of <code>composer.json</code>. After making that change and saving the file, you can install the extensions by running <code>composer update --prefer-dist</code> in the command-line.</p>
+<p>For details about using concrete template engine please refer to its documentation:</p>
+<ul>
+<li><a href="https://github.com/yiisoft/yii2-twig/tree/master/docs/guide">Twig guide</a></li>
+<li><a href="https://github.com/yiisoft/yii2-smarty/tree/master/docs/guide">Smarty guide</a></li>
+</ul>

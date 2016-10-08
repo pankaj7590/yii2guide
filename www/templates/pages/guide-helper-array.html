@@ -1,0 +1,321 @@
+<h1>ArrayHelper <span id="arrayhelper"></span><a href="#arrayhelper" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#getting-values">Getting Values</a></li>
+<li><a href="#checking-existence-of-keys">Checking Existence of Keys</a></li>
+<li><a href="#retrieving-columns">Retrieving Columns</a></li>
+<li><a href="#reindexing-arrays">Re-indexing Arrays</a></li>
+<li><a href="#building-maps">Building Maps</a></li>
+<li><a href="#multidimensional-sorting">Multidimensional Sorting</a></li>
+<li><a href="#detecting-array-types">Detecting Array Types</a></li>
+<li><a href="#html-encoding-values">HTML Encoding and Decoding Values</a></li>
+<li><a href="#merging-arrays">Merging Arrays</a></li>
+<li><a href="#converting-objects-to-arrays">Converting Objects to Arrays</a></li>
+<li><a href="#testing-arrays">Testing against Arrays</a></li></ol></div>
+<p>Additionally to the <a href="http://php.net/manual/en/book.array.php">rich set of PHP array functions</a>, the Yii array helper provides
+extra static methods allowing you to deal with arrays more efficiently.</p>
+<h2>Getting Values  <span id="getting-values"></span><a href="#getting-values" class="hashlink">&para;</a></h2><p>Retrieving values from an array, an object or a complex structure consisting of both using standard PHP is quite
+repetitive. You have to check if key exists with <code>isset</code> first, then if it does you're getting it, if not,
+providing default value:</p>
+<pre><code class="hljs php language-php"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$name</span> = <span class="hljs-string">'Alex'</span>;
+}
+
+<span class="hljs-variable">$array</span> = [
+    <span class="hljs-string">'foo'</span> =&gt; [
+        <span class="hljs-string">'bar'</span> =&gt; <span class="hljs-keyword">new</span> User(),
+    ]
+];
+
+<span class="hljs-variable">$value</span> = <span class="hljs-keyword">isset</span>(<span class="hljs-variable">$array</span>[<span class="hljs-string">'foo'</span>][<span class="hljs-string">'bar'</span>]-&gt;name) ? <span class="hljs-variable">$array</span>[<span class="hljs-string">'foo'</span>][<span class="hljs-string">'bar'</span>]-&gt;name : <span class="hljs-keyword">null</span>;
+</code></pre>
+<p>Yii provides a very convenient method to do it:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$value</span> = ArrayHelper::getValue(<span class="hljs-variable">$array</span>, <span class="hljs-string">'foo.bar.name'</span>);
+</code></pre>
+<p>First method argument is where we're getting value from. Second argument specifies how to get the data. It could be one
+of the following:</p>
+<ul>
+<li>Name of array key or object property to retrieve value from.</li>
+<li>Set of dot separated array keys or object property names. The one we've used in the example above.</li>
+<li>A callback returning a value.</li>
+</ul>
+<p>The callback should be the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$fullName</span> = ArrayHelper::getValue(<span class="hljs-variable">$user</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$user</span>, <span class="hljs-variable">$defaultValue</span>)</span> </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$user</span>-&gt;firstName . <span class="hljs-string">' '</span> . <span class="hljs-variable">$user</span>-&gt;lastName;
+});
+</code></pre>
+<p>Third optional argument is default value which is <code>null</code> if not specified. Could be used as follows:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$username</span> = ArrayHelper::getValue(<span class="hljs-variable">$comment</span>, <span class="hljs-string">'user.username'</span>, <span class="hljs-string">'Unknown'</span>);
+</code></pre>
+<p>In case you want to get the value and then immediately remove it from array you can use <code>remove</code> method:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$array</span> = [<span class="hljs-string">'type'</span> =&gt; <span class="hljs-string">'A'</span>, <span class="hljs-string">'options'</span> =&gt; [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>]];
+<span class="hljs-variable">$type</span> = ArrayHelper::remove(<span class="hljs-variable">$array</span>, <span class="hljs-string">'type'</span>);
+</code></pre>
+<p>After executing the code <code>$array</code> will contain <code>['options' =&gt; [1, 2]]</code> and <code>$type</code> will be <code>A</code>. Note that unlike
+<code>getValue</code> method, <code>remove</code> supports simple key names only.</p>
+<h2>Checking Existence of Keys  <span id="checking-existence-of-keys"></span><a href="#checking-existence-of-keys" class="hashlink">&para;</a></h2><p><code>ArrayHelper::keyExists</code> works the same way as <a href="http://php.net/manual/en/function.array-key-exists.php">array_key_exists</a>
+except that it also supports case-insensitive key comparison. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$data1</span> = [
+    <span class="hljs-string">'userName'</span> =&gt; <span class="hljs-string">'Alex'</span>,
+];
+
+<span class="hljs-variable">$data2</span> = [
+    <span class="hljs-string">'username'</span> =&gt; <span class="hljs-string">'Carsten'</span>,
+];
+
+<span class="hljs-keyword">if</span> (!ArrayHelper::keyExists(<span class="hljs-string">'username'</span>, <span class="hljs-variable">$data1</span>, <span class="hljs-keyword">false</span>) || !ArrayHelper::keyExists(<span class="hljs-string">'username'</span>, <span class="hljs-variable">$data2</span>, <span class="hljs-keyword">false</span>)) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"Please provide username."</span>;
+}
+</code></pre>
+<h2>Retrieving Columns  <span id="retrieving-columns"></span><a href="#retrieving-columns" class="hashlink">&para;</a></h2><p>Often you need to get a column of values from array of data rows or objects. Common example is getting a list of IDs.</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$data</span> = [
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'123'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'abc'</span>],
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'def'</span>],
+];
+<span class="hljs-variable">$ids</span> = ArrayHelper::getColumn(<span class="hljs-variable">$array</span>, <span class="hljs-string">'id'</span>);
+</code></pre>
+<p>The result will be <code>['123', '345']</code>.</p>
+<p>If additional transformations are required or the way of getting value is complex, second argument could be specified
+as an anonymous function:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$result</span> = ArrayHelper::getColumn(<span class="hljs-variable">$array</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$element</span>)</span> </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$element</span>[<span class="hljs-string">'id'</span>];
+});
+</code></pre>
+<h2>Re-indexing Arrays  <span id="reindexing-arrays"></span><a href="#reindexing-arrays" class="hashlink">&para;</a></h2><p>In order to index an array according to a specified key, the <code>index</code> method can be used. The input should be either
+multidimensional array or an array of objects. The <code>$key</code> can be either a key name of the sub-array, a property name of
+object, or an anonymous function that must return the value that will be used as a key.</p>
+<p>The <code>$groups</code> attribute is an array of keys, that will be used to group the input array into one or more sub-arrays
+based on keys specified.</p>
+<p>If the <code>$key</code> attribute or its value for the particular element is <code>null</code> and <code>$groups</code> is not defined, the array
+element will be discarded. Otherwise, if <code>$groups</code> is specified, array element will be added to the result array
+without any key.</p>
+<p>For example:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$array</span> = [
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'123'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'abc'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'laptop'</span>],
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'def'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'tablet'</span>],
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'hgi'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'smartphone'</span>],
+];
+<span class="hljs-variable">$result</span> = ArrayHelper::index(<span class="hljs-variable">$array</span>, <span class="hljs-string">'id'</span>);
+</code></pre>
+<p>The result will be an associative array, where the key is the value of <code>id</code> attribute</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'123'</span> =&gt; [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'123'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'abc'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'laptop'</span>],
+    <span class="hljs-string">'345'</span> =&gt; [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'hgi'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'smartphone'</span>]
+    <span class="hljs-comment">// The second element of an original array is overwritten by the last element because of the same id</span>
+]
+</code></pre>
+<p>Anonymous function, passed as a <code>$key</code>, gives the same result.</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$result</span> = ArrayHelper::index(<span class="hljs-variable">$array</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$element</span>)</span> </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$element</span>[<span class="hljs-string">'id'</span>];
+});
+</code></pre>
+<p>Passing <code>id</code> as a third argument will group <code>$array</code> by <code>id</code>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$result</span> = ArrayHelper::index(<span class="hljs-variable">$array</span>, <span class="hljs-keyword">null</span>, <span class="hljs-string">'id'</span>);
+</code></pre>
+<p>The result will be a multidimensional array grouped by <code>id</code> on the first level and not indexed on the second level:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'123'</span> =&gt; [
+        [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'123'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'abc'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'laptop'</span>]
+    ],
+    <span class="hljs-string">'345'</span> =&gt; [ <span class="hljs-comment">// all elements with this index are present in the result array</span>
+        [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'def'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'tablet'</span>],
+        [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'hgi'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'smartphone'</span>],
+    ]
+]
+</code></pre>
+<p>An anonymous function can be used in the grouping array as well:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$result</span> = ArrayHelper::index(<span class="hljs-variable">$array</span>, <span class="hljs-string">'data'</span>, [<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$element</span>)</span> </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$element</span>[<span class="hljs-string">'id'</span>];
+}, <span class="hljs-string">'device'</span>]);
+</code></pre>
+<p>The result will be a multidimensional array grouped by <code>id</code> on the first level, by <code>device</code> on the second level and
+indexed by <code>data</code> on the third level:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'123'</span> =&gt; [
+        <span class="hljs-string">'laptop'</span> =&gt; [
+            <span class="hljs-string">'abc'</span> =&gt; [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'123'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'abc'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'laptop'</span>]
+        ]
+    ],
+    <span class="hljs-string">'345'</span> =&gt; [
+        <span class="hljs-string">'tablet'</span> =&gt; [
+            <span class="hljs-string">'def'</span> =&gt; [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'def'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'tablet'</span>]
+        ],
+        <span class="hljs-string">'smartphone'</span> =&gt; [
+            <span class="hljs-string">'hgi'</span> =&gt; [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'data'</span> =&gt; <span class="hljs-string">'hgi'</span>, <span class="hljs-string">'device'</span> =&gt; <span class="hljs-string">'smartphone'</span>]
+        ]
+    ]
+]
+</code></pre>
+<h2>Building Maps  <span id="building-maps"></span><a href="#building-maps" class="hashlink">&para;</a></h2><p>In order to build a map (key-value pairs) from a multidimensional array or an array of objects you can use <code>map</code> method.
+The <code>$from</code> and <code>$to</code> parameters specify the key names or property names to set up the map. Optionally, one can further
+group the map according to a grouping field <code>$group</code>. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$array</span> = [
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'123'</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'aaa'</span>, <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'x'</span>],
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'124'</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'bbb'</span>, <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'x'</span>],
+    [<span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'345'</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'ccc'</span>, <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'y'</span>],
+];
+
+<span class="hljs-variable">$result</span> = ArrayHelper::map(<span class="hljs-variable">$array</span>, <span class="hljs-string">'id'</span>, <span class="hljs-string">'name'</span>);
+<span class="hljs-comment">// the result is:</span>
+<span class="hljs-comment">// [</span>
+<span class="hljs-comment">//     '123' =&gt; 'aaa',</span>
+<span class="hljs-comment">//     '124' =&gt; 'bbb',</span>
+<span class="hljs-comment">//     '345' =&gt; 'ccc',</span>
+<span class="hljs-comment">// ]</span>
+
+<span class="hljs-variable">$result</span> = ArrayHelper::map(<span class="hljs-variable">$array</span>, <span class="hljs-string">'id'</span>, <span class="hljs-string">'name'</span>, <span class="hljs-string">'class'</span>);
+<span class="hljs-comment">// the result is:</span>
+<span class="hljs-comment">// [</span>
+<span class="hljs-comment">//     'x' =&gt; [</span>
+<span class="hljs-comment">//         '123' =&gt; 'aaa',</span>
+<span class="hljs-comment">//         '124' =&gt; 'bbb',</span>
+<span class="hljs-comment">//     ],</span>
+<span class="hljs-comment">//     'y' =&gt; [</span>
+<span class="hljs-comment">//         '345' =&gt; 'ccc',</span>
+<span class="hljs-comment">//     ],</span>
+<span class="hljs-comment">// ]</span>
+</code></pre>
+<h2>Multidimensional Sorting  <span id="multidimensional-sorting"></span><a href="#multidimensional-sorting" class="hashlink">&para;</a></h2><p><code>multisort</code> method helps to sort an array of objects or nested arrays by one or several keys. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$data</span> = [
+    [<span class="hljs-string">'age'</span> =&gt; <span class="hljs-number">30</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Alexander'</span>],
+    [<span class="hljs-string">'age'</span> =&gt; <span class="hljs-number">30</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Brian'</span>],
+    [<span class="hljs-string">'age'</span> =&gt; <span class="hljs-number">19</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Barney'</span>],
+];
+ArrayHelper::multisort(<span class="hljs-variable">$data</span>, [<span class="hljs-string">'age'</span>, <span class="hljs-string">'name'</span>], [SORT_ASC, SORT_DESC]);
+</code></pre>
+<p>After sorting we'll get the following in <code>$data</code>:</p>
+<pre><code class="hljs php language-php">[
+    [<span class="hljs-string">'age'</span> =&gt; <span class="hljs-number">19</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Barney'</span>],
+    [<span class="hljs-string">'age'</span> =&gt; <span class="hljs-number">30</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Brian'</span>],
+    [<span class="hljs-string">'age'</span> =&gt; <span class="hljs-number">30</span>, <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Alexander'</span>],
+];
+</code></pre>
+<p>Second argument that specifies keys to sort by can be a string if it's a single key, an array in case of multiple keys
+or an anonymous function like the following one:</p>
+<pre><code class="hljs php language-php">ArrayHelper::multisort(<span class="hljs-variable">$data</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(<span class="hljs-variable">$item</span>)</span> </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">isset</span>(<span class="hljs-variable">$item</span>[<span class="hljs-string">'age'</span>]) ? [<span class="hljs-string">'age'</span>, <span class="hljs-string">'name'</span>] : <span class="hljs-string">'name'</span>;
+});
+</code></pre>
+<p>Third argument is direction. In case of sorting by a single key it could be either <code>SORT_ASC</code> or
+<code>SORT_DESC</code>. If sorting by multiple values you can sort each value differently by providing an array of
+sort direction.</p>
+<p>Last argument is PHP sort flag that could take the same values as the ones passed to
+PHP <a href="http://php.net/manual/en/function.sort.php">sort()</a>.</p>
+<h2>Detecting Array Types  <span id="detecting-array-types"></span><a href="#detecting-array-types" class="hashlink">&para;</a></h2><p>It is handy to know whether an array is indexed or an associative. Here's an example:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// no keys specified</span>
+<span class="hljs-variable">$indexed</span> = [<span class="hljs-string">'Qiang'</span>, <span class="hljs-string">'Paul'</span>];
+<span class="hljs-keyword">echo</span> ArrayHelper::isIndexed(<span class="hljs-variable">$indexed</span>);
+
+<span class="hljs-comment">// all keys are strings</span>
+<span class="hljs-variable">$associative</span> = [<span class="hljs-string">'framework'</span> =&gt; <span class="hljs-string">'Yii'</span>, <span class="hljs-string">'version'</span> =&gt; <span class="hljs-string">'2.0'</span>];
+<span class="hljs-keyword">echo</span> ArrayHelper::isAssociative(<span class="hljs-variable">$associative</span>);
+</code></pre>
+<h2>HTML Encoding and Decoding Values  <span id="html-encoding-values"></span><a href="#html-encoding-values" class="hashlink">&para;</a></h2><p>In order to encode or decode special characters in an array of strings into HTML entities you can use the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$encoded</span> = ArrayHelper::htmlEncode(<span class="hljs-variable">$data</span>);
+<span class="hljs-variable">$decoded</span> = ArrayHelper::htmlDecode(<span class="hljs-variable">$data</span>);
+</code></pre>
+<p>Only values will be encoded by default. By passing second argument as <code>false</code> you can encode array's keys as well.
+Encoding will use application charset and could be changed via third argument.</p>
+<h2>Merging Arrays  <span id="merging-arrays"></span><a href="#merging-arrays" class="hashlink">&para;</a></h2><p>You can use <a href="yii-helpers-basearrayhelper.html#merge()-detail">ArrayHelper::merge()</a> to merge two or more arrays into one recursively.
+If each array has an element with the same string key value, the latter will overwrite the former
+(different from <a href="http://php.net/manual/en/function.array-merge-recursive.php">array_merge_recursive()</a>).
+Recursive merging will be conducted if both arrays have an element of array type and are having the same key.
+For integer-keyed elements, the elements from the latter array will be appended to the former array.
+You can use <a href="yii-helpers-unsetarrayvalue.html">yii\helpers\UnsetArrayValue</a> object to unset value from previous array or
+<a href="yii-helpers-replacearrayvalue.html">yii\helpers\ReplaceArrayValue</a> to force replace former value instead of recursive merging.</p>
+<p>For example:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$array1</span> = [
+    <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Yii'</span>,
+    <span class="hljs-string">'version'</span> =&gt; <span class="hljs-string">'1.1'</span>,
+    <span class="hljs-string">'ids'</span> =&gt; [
+        <span class="hljs-number">1</span>,
+    ],
+    <span class="hljs-string">'validDomains'</span> =&gt; [
+        <span class="hljs-string">'example.com'</span>,
+        <span class="hljs-string">'www.example.com'</span>,
+    ],
+    <span class="hljs-string">'emails'</span> =&gt; [
+        <span class="hljs-string">'admin'</span> =&gt; <span class="hljs-string">'admin@example.com'</span>,
+        <span class="hljs-string">'dev'</span> =&gt; <span class="hljs-string">'dev@example.com'</span>,
+    ],
+];
+
+<span class="hljs-variable">$array2</span> = [
+    <span class="hljs-string">'version'</span> =&gt; <span class="hljs-string">'2.0'</span>,
+    <span class="hljs-string">'ids'</span> =&gt; [
+        <span class="hljs-number">2</span>,
+    ],
+    <span class="hljs-string">'validDomains'</span> =&gt; <span class="hljs-keyword">new</span> \yii\helpers\ReplaceArrayValue([
+        <span class="hljs-string">'yiiframework.com'</span>,
+        <span class="hljs-string">'www.yiiframework.com'</span>,
+    ]),
+    <span class="hljs-string">'emails'</span> =&gt; [
+        <span class="hljs-string">'dev'</span> =&gt; <span class="hljs-keyword">new</span> \yii\helpers\UnsetArrayValue(),
+    ],
+];
+
+<span class="hljs-variable">$result</span> = ArrayHelper::merge(<span class="hljs-variable">$array1</span>, <span class="hljs-variable">$array2</span>);
+</code></pre>
+<p>The result will be:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'name'</span> =&gt; <span class="hljs-string">'Yii'</span>,
+    <span class="hljs-string">'version'</span> =&gt; <span class="hljs-string">'2.0'</span>,
+    <span class="hljs-string">'ids'</span> =&gt; [
+        <span class="hljs-number">1</span>,
+        <span class="hljs-number">2</span>,
+    ],
+    <span class="hljs-string">'validDomains'</span> =&gt; [
+        <span class="hljs-string">'yiiframework.com'</span>,
+        <span class="hljs-string">'www.yiiframework.com'</span>,
+    ],
+    <span class="hljs-string">'emails'</span> =&gt; [
+        <span class="hljs-string">'admin'</span> =&gt; <span class="hljs-string">'admin@example.com'</span>,
+    ],
+]
+</code></pre>
+<h2>Converting Objects to Arrays  <span id="converting-objects-to-arrays"></span><a href="#converting-objects-to-arrays" class="hashlink">&para;</a></h2><p>Often you need to convert an object or an array of objects into an array. The most common case is converting active record
+models in order to serve data arrays via REST API or use it otherwise. The following code could be used to do it:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$posts</span> = Post::find()-&gt;limit(<span class="hljs-number">10</span>)-&gt;all();
+<span class="hljs-variable">$data</span> = ArrayHelper::toArray(<span class="hljs-variable">$posts</span>, [
+    <span class="hljs-string">'app\models\Post'</span> =&gt; [
+        <span class="hljs-string">'id'</span>,
+        <span class="hljs-string">'title'</span>,
+        <span class="hljs-comment">// the key name in array result =&gt; property name</span>
+        <span class="hljs-string">'createTime'</span> =&gt; <span class="hljs-string">'created_at'</span>,
+        <span class="hljs-comment">// the key name in array result =&gt; anonymous function</span>
+        <span class="hljs-string">'length'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$post</span>)</span> </span>{
+            <span class="hljs-keyword">return</span> strlen(<span class="hljs-variable">$post</span>-&gt;content);
+        },
+    ],
+]);
+</code></pre>
+<p>The first argument contains the data we want to convert. In our case we're converting a <code>Post</code> AR model.</p>
+<p>The second argument is conversion mapping per class. We're setting a mapping for <code>Post</code> model.
+Each mapping array contains a set of mappings. Each mapping could be:</p>
+<ul>
+<li>A field name to include as is.</li>
+<li>A key-value pair of desired array key name and model column name to take value from.</li>
+<li>A key-value pair of desired array key name and a callback which returns value.</li>
+</ul>
+<p>The result of conversion above will be:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">123</span>,
+    <span class="hljs-string">'title'</span> =&gt; <span class="hljs-string">'test'</span>,
+    <span class="hljs-string">'createTime'</span> =&gt; <span class="hljs-string">'2013-01-01 12:00AM'</span>,
+    <span class="hljs-string">'length'</span> =&gt; <span class="hljs-number">301</span>,
+]
+</code></pre>
+<p>It is possible to provide default way of converting object to array for a specific class by implementing
+<a href="yii-base-arrayable.html">Arrayable</a> interface in that class.</p>
+<h2>Testing against Arrays  <span id="testing-arrays"></span><a href="#testing-arrays" class="hashlink">&para;</a></h2><p>Often you need to check if an element is in an array or a set of elements is a subset of another.
+While PHP offers <code>in_array()</code>, this does not support subsets or <code>\Traversable</code> objects.</p>
+<p>To aid these kinds of tests, <a href="yii-helpers-arrayhelper.html">yii\helpers\ArrayHelper</a> provides <a href="yii-helpers-basearrayhelper.html#isIn()-detail">isIn()</a>
+and <a href="yii-helpers-basearrayhelper.html#isSubset()-detail">isSubset()</a> with the same signature as
+<a href="http://php.net/manual/en/function.in-array.php">in_array()</a>.</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// true</span>
+ArrayHelper::isIn(<span class="hljs-string">'a'</span>, [<span class="hljs-string">'a'</span>]);
+<span class="hljs-comment">// true</span>
+ArrayHelper::isIn(<span class="hljs-string">'a'</span>, <span class="hljs-keyword">new</span> ArrayObject([<span class="hljs-string">'a'</span>]));
+
+<span class="hljs-comment">// true </span>
+ArrayHelper::isSubset(<span class="hljs-keyword">new</span> ArrayObject([<span class="hljs-string">'a'</span>, <span class="hljs-string">'c'</span>]), <span class="hljs-keyword">new</span> ArrayObject([<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-string">'c'</span>]));
+</code></pre>

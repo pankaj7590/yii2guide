@@ -1,0 +1,76 @@
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h1>
+
+<h2><a id="user-content-requirements" class="anchor" href="#requirements" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Requirements</h2>
+
+<p>This extension requires <a href="http://us1.php.net/manual/en/set.mongodb.php">MongoDB PHP Extension</a> version 1.0.0 or higher.</p>
+
+<h2><a id="user-content-getting-composer-package" class="anchor" href="#getting-composer-package" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Getting Composer package</h2>
+
+<p>The preferred way to install this extension is through <a href="http://getcomposer.org/download/">composer</a>.</p>
+
+<p>Either run</p>
+
+<pre><code>php composer.phar require --prefer-dist yiisoft/yii2-mongodb
+</code></pre>
+
+<p>or add</p>
+
+<pre><code>"yiisoft/yii2-mongodb": "~2.1.0"
+</code></pre>
+
+<p>to the require section of your composer.json.</p>
+
+<h2><a id="user-content-configuring-application" class="anchor" href="#configuring-application" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuring application</h2>
+
+<p>To use this extension, simply add the following code in your application configuration:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">return</span> [</span>
+<span class="pl-s1">    <span class="pl-c">//....</span></span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>components<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>mongodb<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>\yii\mongodb\Connection<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>dsn<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>mongodb://developer:password@localhost:27017/mydatabase<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">        ],</span>
+<span class="pl-s1">    ],</span>
+<span class="pl-s1">];</span></pre></div>
+</article>
+
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-basic-usage" class="anchor" href="#basic-usage" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Basic Usage</h1>
+
+<p>Once you have a MongoDB connection instance, you can execute a MongoDB commands and queries
+using [[yii\mongodb\Command]]:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-c">// execute command:</span></span>
+<span class="pl-s1"><span class="pl-smi">$result</span> <span class="pl-k">=</span> <span class="pl-c1">Yii</span><span class="pl-k">::</span><span class="pl-smi">$app</span><span class="pl-k">-&gt;</span><span class="pl-smi">mongodb</span><span class="pl-k">-&gt;</span>createCommand([<span class="pl-s"><span class="pl-pds">'</span>listIndexes<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>some_collection<span class="pl-pds">'</span></span>])<span class="pl-k">-&gt;</span>execute();</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-c">// execute query (find):</span></span>
+<span class="pl-s1"><span class="pl-smi">$cursor</span> <span class="pl-k">=</span> <span class="pl-c1">Yii</span><span class="pl-k">::</span><span class="pl-smi">$app</span><span class="pl-k">-&gt;</span><span class="pl-smi">mongodb</span><span class="pl-k">-&gt;</span>createCommand([<span class="pl-s"><span class="pl-pds">'</span>projection<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">true</span>]])<span class="pl-k">-&gt;</span>query(<span class="pl-s"><span class="pl-pds">'</span>some_collection<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-c">// execute batch (bulk) operations:</span></span>
+<span class="pl-s1"><span class="pl-c1">Yii</span><span class="pl-k">::</span><span class="pl-smi">$app</span><span class="pl-k">-&gt;</span><span class="pl-smi">mongodb</span><span class="pl-k">-&gt;</span>createCommand()</span>
+<span class="pl-s1">    <span class="pl-k">-&gt;</span>addInsert([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>new<span class="pl-pds">'</span></span>])</span>
+<span class="pl-s1">    <span class="pl-k">-&gt;</span>addUpdate([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>existing<span class="pl-pds">'</span></span>], [<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>updated<span class="pl-pds">'</span></span>])</span>
+<span class="pl-s1">    <span class="pl-k">-&gt;</span>addDelete([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>old<span class="pl-pds">'</span></span>])</span>
+<span class="pl-s1">    <span class="pl-k">-&gt;</span>executeBatch(<span class="pl-s"><span class="pl-pds">'</span>customer<span class="pl-pds">'</span></span>);</span></pre></div>
+
+<p>Using the connection instance you may access databases and collections.
+Most of the MongoDB commands are accessible via [[\yii\mongodb\Collection]] instance:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$collection</span> <span class="pl-k">=</span> <span class="pl-c1">Yii</span><span class="pl-k">::</span><span class="pl-smi">$app</span><span class="pl-k">-&gt;</span><span class="pl-smi">mongodb</span><span class="pl-k">-&gt;</span>getCollection(<span class="pl-s"><span class="pl-pds">'</span>customer<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"><span class="pl-smi">$collection</span><span class="pl-k">-&gt;</span>insert([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>John Smith<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">1</span>]);</span></pre></div>
+
+<p>To perform "find" queries, you should use [[\yii\mongodb\Query]]:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">yii\mongodb\Query</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$query</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Query</span>();</span>
+<span class="pl-s1"><span class="pl-c">// compose the query</span></span>
+<span class="pl-s1"><span class="pl-smi">$query</span><span class="pl-k">-&gt;</span>select([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>])</span>
+<span class="pl-s1">    <span class="pl-k">-&gt;</span>from(<span class="pl-s"><span class="pl-pds">'</span>customer<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">    <span class="pl-k">-&gt;</span>limit(<span class="pl-c1">10</span>);</span>
+<span class="pl-s1"><span class="pl-c">// execute the query</span></span>
+<span class="pl-s1"><span class="pl-smi">$rows</span> <span class="pl-k">=</span> <span class="pl-smi">$query</span><span class="pl-k">-&gt;</span>all();</span></pre></div>
+</article>
+
+
+<a href="https://github.com/yiisoft/yii2-mongodb/blob/master/docs/guide/README.md">For more information</a>

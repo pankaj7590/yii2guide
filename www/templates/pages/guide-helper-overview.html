@@ -1,0 +1,61 @@
+
+        <h1>Helpers <span id="helpers"></span><a href="#helpers" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#core-helper-classes">Core Helper Classes</a></li>
+<li><a href="#customizing-helper-classes">Customizing Helper Classes</a></li></ol></div>
+<blockquote class="note"><p><strong>Note: </strong>This section is under development.</p>
+</blockquote>
+<p>Yii provides many classes that help simplify common coding tasks, such as string or array manipulations,
+HTML code generation, and so on. These helper classes are organized under the <code>yii\helpers</code> namespace and
+are all static classes (meaning they contain only static properties and methods and should not be instantiated).</p>
+<p>You use a helper class by directly calling one of its static methods, like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+
+<span class="hljs-keyword">echo</span> Html::encode(<span class="hljs-string">'Test &gt; test'</span>);
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>To support <a href="#customizing-helper-classes">customizing helper classes</a>, Yii breaks each core helper class
+  into two classes: a base class (e.g. <code>BaseArrayHelper</code>) and a concrete class (e.g. <code>ArrayHelper</code>).
+  When you use a helper, you should only use the concrete version and never use the base class.</p>
+</blockquote>
+<h2>Core Helper Classes <span id="core-helper-classes"></span><a href="#core-helper-classes" class="hashlink">&para;</a></h2><p>The following core helper classes are provided in the Yii releases:</p>
+<ul>
+<li><a href="guide-helper-array.html">ArrayHelper</a></li>
+<li>Console</li>
+<li>FileHelper</li>
+<li>FormatConverter</li>
+<li><a href="guide-helper-html.html">Html</a></li>
+<li>HtmlPurifier</li>
+<li>Imagine (provided by yii2-imagine extension)</li>
+<li>Inflector</li>
+<li>Json</li>
+<li>Markdown</li>
+<li>StringHelper</li>
+<li><a href="guide-helper-url.html">Url</a></li>
+<li>VarDumper</li>
+</ul>
+<h2>Customizing Helper Classes  <span id="customizing-helper-classes"></span><a href="#customizing-helper-classes" class="hashlink">&para;</a></h2><p>To customize a core helper class (e.g. <a href="yii-helpers-arrayhelper.html">yii\helpers\ArrayHelper</a>), you should create a new class extending
+from the helpers corresponding base class (e.g. <a href="yii-helpers-basearrayhelper.html">yii\helpers\BaseArrayHelper</a>) and name your class the same
+as the corresponding concrete class (e.g. <a href="yii-helpers-arrayhelper.html">yii\helpers\ArrayHelper</a>), including its namespace. This class
+will then be set up to replace the original implementation of the framework.</p>
+<p>The following example shows how to customize the <a href="yii-helpers-basearrayhelper.html#merge()-detail">merge()</a> method of the
+<a href="yii-helpers-arrayhelper.html">yii\helpers\ArrayHelper</a> class:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ArrayHelper</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseArrayHelper</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">merge</span><span class="hljs-params">(<span class="hljs-variable">$a</span>, <span class="hljs-variable">$b</span>)</span>
+    </span>{
+        <span class="hljs-comment">// your custom implementation</span>
+    }
+}
+</code></pre>
+<p>Save your class in a file named <code>ArrayHelper.php</code>. The file can be in any directory, for example <code>@app/components</code>.</p>
+<p>Next, in your application's <a href="guide-structure-entry-scripts.html">entry script</a>, add the following line of code
+after including the <code>yii.php</code> file to tell the <a href="guide-concept-autoloading.html">Yii class autoloader</a> to load your custom
+class instead of the original helper class from the framework:</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$classMap</span>[<span class="hljs-string">'yii\helpers\ArrayHelper'</span>] = <span class="hljs-string">'@app/components/ArrayHelper.php'</span>;
+</code></pre>
+<p>Note that customizing of helper classes is only useful if you want to change the behavior of an existing function
+of the helpers. If you want to add additional functions to use in your application you may better create a separate
+helper for that.</p>

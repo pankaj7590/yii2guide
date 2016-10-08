@@ -1,0 +1,152 @@
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h1>
+
+<h2><a id="user-content-getting-composer-package" class="anchor" href="#getting-composer-package" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Getting Composer package</h2>
+
+<p>The preferred way to install this extension is through <a href="http://getcomposer.org/download/">composer</a>.</p>
+
+<p>Either run</p>
+
+<pre><code>php composer.phar require --dev --prefer-dist yiisoft/yii2-gii
+</code></pre>
+
+<p>or add</p>
+
+<pre><code>"yiisoft/yii2-gii": "~2.0.0"
+</code></pre>
+
+<p>to the require-dev section of your <code>composer.json</code> file.</p>
+
+<h2><a id="user-content-configuring-application" class="anchor" href="#configuring-application" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuring application</h2>
+
+<p>Once the Gii extension has been installed, you enable it by adding these lines to your application configuration file:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">return</span> [</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span>],</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>yii\gii\Module<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">        ],</span>
+<span class="pl-s1">        <span class="pl-c">// ...</span></span>
+<span class="pl-s1">    ],</span>
+<span class="pl-s1">    <span class="pl-c">// ...</span></span>
+<span class="pl-s1">];</span></pre></div>
+
+<p>You can then access Gii through the following URL:</p>
+
+<pre><code>http://localhost/path/to/index.php?r=gii
+</code></pre>
+
+<p>If you have enabled pretty URLs, you may use the following URL:</p>
+
+<pre><code>http://localhost/path/to/index.php/gii
+</code></pre>
+
+<blockquote>
+<p>Note: if you are accessing gii from an IP address other than localhost, access will be denied by default.
+To circumvent that default, add the allowed IP addresses to the configuration:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>yii\gii\Module<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>allowedIPs<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>127.0.0.1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>::1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>192.168.0.*<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>192.168.178.20<span class="pl-pds">'</span></span>] <span class="pl-c">// adjust this to your needs</span></span>
+<span class="pl-s1">],</span></pre></div>
+</blockquote>
+
+<p>If you have configured Gii similarly in your console application configuration, you may also access Gii through
+command window like the following:</p>
+
+<pre><code># change path to your application's base path
+cd path/to/AppBasePath
+
+# show help information about Gii
+yii help gii
+
+# show help information about the model generator in Gii
+yii help gii/model
+
+# generate City model from city table
+yii gii/model --tableName=city --modelClass=City
+</code></pre>
+
+<h3><a id="user-content-basic-application" class="anchor" href="#basic-application" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Basic application</h3>
+
+<p>In basic project template configuration structure is a bit different so Gii should be configured in
+<code>config/web.php</code>:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-c">// ...</span></span>
+<span class="pl-s1"><span class="pl-k">if</span> (<span class="pl-c1">YII_ENV_DEV</span>) {</span>
+<span class="pl-s1">    <span class="pl-c">// configuration adjustments for 'dev' environment</span></span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span>][] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span>][<span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>yii\debug\Module<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span>][] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span>][<span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>yii\gii\Module<span class="pl-pds">'</span></span>; <span class="pl-c">// &lt;--- here</span></span>
+<span class="pl-s1">}</span></pre></div>
+
+<p>So in order to adjust IP address you need to do it like the following:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">if</span> (<span class="pl-c1">YII_ENV_DEV</span>) {</span>
+<span class="pl-s1">    <span class="pl-c">// configuration adjustments for 'dev' environment</span></span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span>][] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span>][<span class="pl-s"><span class="pl-pds">'</span>debug<span class="pl-pds">'</span></span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>yii\debug\Module<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>bootstrap<span class="pl-pds">'</span></span>][] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span>;</span>
+<span class="pl-s1">    <span class="pl-smi">$config</span>[<span class="pl-s"><span class="pl-pds">'</span>modules<span class="pl-pds">'</span></span>][<span class="pl-s"><span class="pl-pds">'</span>gii<span class="pl-pds">'</span></span>] <span class="pl-k">=</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>yii\gii\Module<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>allowedIPs<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>127.0.0.1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>::1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>192.168.0.*<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>192.168.178.20<span class="pl-pds">'</span></span>],</span>
+<span class="pl-s1">    ];</span>
+<span class="pl-s1">}</span></pre></div>
+</article>
+
+
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-basic-usage" class="anchor" href="#basic-usage" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Basic Usage</h1>
+
+<p>When you open Gii you first see the entry page that lets you choose a generator.</p>
+
+<p><a href="/yiisoft/yii2-gii/blob/master/docs/guide/images/gii-entry.png" target="_blank"><img src="/yiisoft/yii2-gii/raw/master/docs/guide/images/gii-entry.png" alt="Gii entry page" style="max-width:100%;"></a></p>
+
+<p>By default there are the following generators available:</p>
+
+<ul>
+<li><strong>Model Generator</strong> - This generator generates an ActiveRecord class for the specified database table.</li>
+<li><strong>CRUD Generator</strong> - This generator generates a controller and views that implement CRUD (Create, Read, Update, Delete)
+operations for the specified data model.</li>
+<li><strong>Controller Generator</strong> - This generator helps you to quickly generate a new controller class, one or several
+controller actions and their corresponding views.</li>
+<li><strong>Form Generator</strong> - This generator generates a view script file that displays a form to collect input for the
+specified model class.</li>
+<li><strong>Module Generator</strong> - This generator helps you to generate the skeleton code needed by a Yii module.</li>
+<li><strong>Extension Generator</strong> - This generator helps you to generate the files needed by a Yii extension.</li>
+</ul>
+
+<p>After choosing a generator by clicking on the "Start" button you will see a form that allows you to configure the
+parameters of the generator. Fill out the form according to your needs and press the "Preview" button to get a
+preview of the code that Gii is about to generate. Depending on the generator you chose and whether the files
+already existed or not, you will get an output similar to what you see in the following picture:</p>
+
+<p><a href="/yiisoft/yii2-gii/blob/master/docs/guide/images/gii-preview.png" target="_blank"><img src="/yiisoft/yii2-gii/raw/master/docs/guide/images/gii-preview.png" alt="Gii preview" style="max-width:100%;"></a></p>
+
+<p>Clicking on the file name you can view a preview of the code that will be generated for that file.
+When the file already exists, Gii also provides a diff view that shows what is different between the code that exists
+and the one that will be generated. In this case you can also choose which files should be overridden and which not.</p>
+
+<blockquote>
+<p>Tip: When using the Model Generator to update models after database change, you can copy the code from Gii preview
+  and merge the changes with your own code. You can use IDE features like PHPStorms
+  <a href="http://www.jetbrains.com/phpstorm/webhelp/comparing-files.html">compare with clipboard</a>, <a href="http://www.aptana.com/products/studio3/download">Aptana Studio</a> or <a href="http://www.eclipse.org/pdt/">Eclipse</a> based editor also allows <a href="http://andrei.gmxhome.de/anyedit/examples.html">compare with clipboard</a> by using <a href="http://andrei.gmxhome.de/anyedit/">AnyEdit tools plugin</a> for this, which allows you to merge in relevant changes and leave out others that may revert your own code.</p>
+</blockquote>
+
+<p>After you have reviewed the code and selected the files to be generated you can click the "Generate" button to create
+the files. If all went fine you are done. When you see errors that Gii is not able to generate the files you have to
+adjust directory permissions so that your webserver is able to write to the directories and create the files.</p>
+
+<blockquote>
+<p>Note: The code generated by Gii is only a template that has to be adjusted to your needs. It is there
+  to help you create new things quickly but it is not something that creates ready to use code.
+  We often see people using the models generated by Gii without change and just extend them to adjust
+  some parts of it. This is not how it is meant to be used. Code generated by Gii may be incomplete or incorrect
+  and has to be changed to fit your needs before you can use it.</p>
+</blockquote>
+</article>
+
+
+<a href="https://github.com/yiisoft/yii2-gii/blob/master/docs/guide/README.md">For more information</a>

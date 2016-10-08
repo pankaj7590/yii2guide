@@ -1,0 +1,205 @@
+<h1>Configurations <span id="configurations"></span><a href="#configurations" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#configuration-format">Configuration Format</a></li>
+<li><a href="#using-configurations">Using Configurations</a></li>
+<li><a href="#configuration-files">Configuration Files</a></li>
+<li><a href="#default-configurations">Default Configurations</a></li>
+<li><a href="#environment-constants">Environment Constants</a></li></ol></div>
+<p>Configurations are widely used in Yii when creating new objects or initializing existing objects.
+Configurations usually include the class name of the object being created, and a list of initial values
+that should be assigned to the object's <a href="guide-concept-properties.html">properties</a>. Configurations may also include a list of
+handlers that should be attached to the object's <a href="guide-concept-events.html">events</a> and/or a list of
+<a href="guide-concept-behaviors.html">behaviors</a> that should also be attached to the object.</p>
+<p>In the following, a configuration is used to create and initialize a database connection:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$config</span> = [
+    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\db\Connection'</span>,
+    <span class="hljs-string">'dsn'</span> =&gt; <span class="hljs-string">'mysql:host=127.0.0.1;dbname=demo'</span>,
+    <span class="hljs-string">'username'</span> =&gt; <span class="hljs-string">'root'</span>,
+    <span class="hljs-string">'password'</span> =&gt; <span class="hljs-string">''</span>,
+    <span class="hljs-string">'charset'</span> =&gt; <span class="hljs-string">'utf8'</span>,
+];
+
+<span class="hljs-variable">$db</span> = Yii::createObject(<span class="hljs-variable">$config</span>);
+</code></pre>
+<p>The <a href="yii-baseyii.html#createObject()-detail">Yii::createObject()</a> method takes a configuration array as its argument, and creates an object by instantiating
+the class named in the configuration. When the object is instantiated, the rest of the configuration
+will be used to initialize the object's properties, event handlers, and behaviors.</p>
+<p>If you already have an object, you may use <a href="yii-baseyii.html#configure()-detail">Yii::configure()</a> to initialize the object's properties with
+a configuration array:</p>
+<pre><code class="hljs php language-php">Yii::configure(<span class="hljs-variable">$object</span>, <span class="hljs-variable">$config</span>);
+</code></pre>
+<p>Note that, in this case, the configuration array should not contain a <code>class</code> element.</p>
+<h2>Configuration Format  <span id="configuration-format"></span><a href="#configuration-format" class="hashlink">&para;</a></h2><p>The format of a configuration can be formally described as:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'ClassName'</span>,
+    <span class="hljs-string">'propertyName'</span> =&gt; <span class="hljs-string">'propertyValue'</span>,
+    <span class="hljs-string">'on eventName'</span> =&gt; <span class="hljs-variable">$eventHandler</span>,
+    <span class="hljs-string">'as behaviorName'</span> =&gt; <span class="hljs-variable">$behaviorConfig</span>,
+]
+</code></pre>
+<p>where</p>
+<ul>
+<li>The <code>class</code> element specifies a fully qualified class name for the object being created.</li>
+<li>The <code>propertyName</code> elements specify the initial values for the named property. The keys are the property names, and the
+values are the corresponding initial values. Only public member variables and <a href="guide-concept-properties.html">properties</a>
+defined by getters/setters can be configured.</li>
+<li>The <code>on eventName</code> elements specify what handlers should be attached to the object's <a href="guide-concept-events.html">events</a>.
+Notice that the array keys are formed by prefixing event names with <code>on </code>. Please refer to
+the <a href="guide-concept-events.html">Events</a> section for supported event handler formats.</li>
+<li>The <code>as behaviorName</code> elements specify what <a href="guide-concept-behaviors.html">behaviors</a> should be attached to the object.
+Notice that the array keys are formed by prefixing behavior names with <code>as </code>; the value, <code>$behaviorConfig</code>, represents
+the configuration for creating a behavior, like a normal configuration  described here.</li>
+</ul>
+<p>Below is an example showing a configuration with initial property values, event handlers, and behaviors:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'app\components\SearchEngine'</span>,
+    <span class="hljs-string">'apiKey'</span> =&gt; <span class="hljs-string">'xxxxxxxx'</span>,
+    <span class="hljs-string">'on search'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$event</span>)</span> </span>{
+        Yii::info(<span class="hljs-string">"Keyword searched: "</span> . <span class="hljs-variable">$event</span>-&gt;keyword);
+    },
+    <span class="hljs-string">'as indexer'</span> =&gt; [
+        <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'app\components\IndexerBehavior'</span>,
+        <span class="hljs-comment">// ... property init values ...</span>
+    ],
+]
+</code></pre>
+<h2>Using Configurations  <span id="using-configurations"></span><a href="#using-configurations" class="hashlink">&para;</a></h2><p>Configurations are used in many places in Yii. At the beginning of this section, we have shown how to 
+create an object according to a configuration by using <a href="yii-baseyii.html#createObject()-detail">Yii::createObject()</a>. In this subsection, we will
+describe application configurations and widget configurations - two major usages of configurations.</p>
+<h3>Application Configurations  <span id="application-configurations"></span><a href="#application-configurations" class="hashlink">&para;</a></h3><p>The configuration for an <a href="guide-structure-applications.html">application</a> is probably one of the most complex arrays in Yii.
+This is because the <a href="yii-web-application.html">application</a> class has a lot of configurable properties and events.
+More importantly, its <a href="yii-di-servicelocator.html#$components-detail">components</a> property can receive an array of configurations
+for creating components that are registered through the application. The following is an abstract from the application
+configuration file for the <a href="guide-start-installation.html">Basic Project Template</a>.</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$config</span> = [
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'basic'</span>,
+    <span class="hljs-string">'basePath'</span> =&gt; dirname(<span class="hljs-keyword">__DIR__</span>),
+    <span class="hljs-string">'extensions'</span> =&gt; <span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/../vendor/yiisoft/extensions.php'</span>),
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'cache'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\caching\FileCache'</span>,
+        ],
+        <span class="hljs-string">'mailer'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\swiftmailer\Mailer'</span>,
+        ],
+        <span class="hljs-string">'log'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\log\Dispatcher'</span>,
+            <span class="hljs-string">'traceLevel'</span> =&gt; YII_DEBUG ? <span class="hljs-number">3</span> : <span class="hljs-number">0</span>,
+            <span class="hljs-string">'targets'</span> =&gt; [
+                [
+                    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\log\FileTarget'</span>,
+                ],
+            ],
+        ],
+        <span class="hljs-string">'db'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\db\Connection'</span>,
+            <span class="hljs-string">'dsn'</span> =&gt; <span class="hljs-string">'mysql:host=localhost;dbname=stay2'</span>,
+            <span class="hljs-string">'username'</span> =&gt; <span class="hljs-string">'root'</span>,
+            <span class="hljs-string">'password'</span> =&gt; <span class="hljs-string">''</span>,
+            <span class="hljs-string">'charset'</span> =&gt; <span class="hljs-string">'utf8'</span>,
+        ],
+    ],
+];
+</code></pre>
+<p>The configuration does not have a <code>class</code> key. This is because it is used as follows in
+an <a href="guide-structure-entry-scripts.html">entry script</a>, where the class name is already given,</p>
+<pre><code class="hljs php language-php">(<span class="hljs-keyword">new</span> yii\web\Application(<span class="hljs-variable">$config</span>))-&gt;run();
+</code></pre>
+<p>More details about configuring the <code>components</code> property of an application can be found
+in the <a href="guide-structure-applications.html">Applications</a> section and the <a href="guide-concept-service-locator.html">Service Locator</a> section.</p>
+<h3>Widget Configurations  <span id="widget-configurations"></span><a href="#widget-configurations" class="hashlink">&para;</a></h3><p>When using <a href="guide-structure-widgets.html">widgets</a>, you often need to use configurations to customize the widget properties.
+Both of the <a href="yii-base-widget.html#widget()-detail">yii\base\Widget::widget()</a> and <a href="yii-base-widget.html#begin()-detail">yii\base\Widget::begin()</a> methods can be used to create
+a widget. They take a configuration array, like the following,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">Menu</span>;
+
+<span class="hljs-keyword">echo</span> Menu::widget([
+    <span class="hljs-string">'activateItems'</span> =&gt; <span class="hljs-keyword">false</span>,
+    <span class="hljs-string">'items'</span> =&gt; [
+        [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Home'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'site/index'</span>]],
+        [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Products'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'product/index'</span>]],
+        [<span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Login'</span>, <span class="hljs-string">'url'</span> =&gt; [<span class="hljs-string">'site/login'</span>], <span class="hljs-string">'visible'</span> =&gt; Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;isGuest],
+    ],
+]);
+</code></pre>
+<p>The above code creates a <code>Menu</code> widget and initializes its <code>activateItems</code> property to be <code>false</code>.
+The <code>items</code> property is also configured with menu items to be displayed.</p>
+<p>Note that because the class name is already given, the configuration array should NOT have the <code>class</code> key.</p>
+<h2>Configuration Files  <span id="configuration-files"></span><a href="#configuration-files" class="hashlink">&para;</a></h2><p>When a configuration is very complex, a common practice is to store it in one or multiple PHP files, known as
+<em>configuration files</em>. A configuration file returns a PHP array representing the configuration.
+For example, you may keep an application configuration in a file named <code>web.php</code>, like the following,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'basic'</span>,
+    <span class="hljs-string">'basePath'</span> =&gt; dirname(<span class="hljs-keyword">__DIR__</span>),
+    <span class="hljs-string">'extensions'</span> =&gt; <span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/../vendor/yiisoft/extensions.php'</span>),
+    <span class="hljs-string">'components'</span> =&gt; <span class="hljs-keyword">require</span>(<span class="hljs-keyword">__DIR__</span> . <span class="hljs-string">'/components.php'</span>),
+];
+</code></pre>
+<p>Because the <code>components</code> configuration is complex too, you store it in a separate file called <code>components.php</code>
+and "require" this file in <code>web.php</code> as shown above. The content of <code>components.php</code> is as follows,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'cache'</span> =&gt; [
+        <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\caching\FileCache'</span>,
+    ],
+    <span class="hljs-string">'mailer'</span> =&gt; [
+        <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\swiftmailer\Mailer'</span>,
+    ],
+    <span class="hljs-string">'log'</span> =&gt; [
+        <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\log\Dispatcher'</span>,
+        <span class="hljs-string">'traceLevel'</span> =&gt; YII_DEBUG ? <span class="hljs-number">3</span> : <span class="hljs-number">0</span>,
+        <span class="hljs-string">'targets'</span> =&gt; [
+            [
+                <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\log\FileTarget'</span>,
+            ],
+        ],
+    ],
+    <span class="hljs-string">'db'</span> =&gt; [
+        <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\db\Connection'</span>,
+        <span class="hljs-string">'dsn'</span> =&gt; <span class="hljs-string">'mysql:host=localhost;dbname=stay2'</span>,
+        <span class="hljs-string">'username'</span> =&gt; <span class="hljs-string">'root'</span>,
+        <span class="hljs-string">'password'</span> =&gt; <span class="hljs-string">''</span>,
+        <span class="hljs-string">'charset'</span> =&gt; <span class="hljs-string">'utf8'</span>,
+    ],
+];
+</code></pre>
+<p>To get a configuration stored in a configuration file, simply "require" it, like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$config</span> = <span class="hljs-keyword">require</span>(<span class="hljs-string">'path/to/web.php'</span>);
+(<span class="hljs-keyword">new</span> yii\web\Application(<span class="hljs-variable">$config</span>))-&gt;run();
+</code></pre>
+<h2>Default Configurations  <span id="default-configurations"></span><a href="#default-configurations" class="hashlink">&para;</a></h2><p>The <a href="yii-baseyii.html#createObject()-detail">Yii::createObject()</a> method is implemented based on a <a href="guide-concept-di-container.html">dependency injection container</a>.
+It allows you to specify a set of the so-called <em>default configurations</em> which will be applied to ALL instances of
+the specified classes when they are being created using <a href="yii-baseyii.html#createObject()-detail">Yii::createObject()</a>. The default configurations
+can be specified by calling <code>Yii::$container-&gt;set()</code> in the <a href="guide-runtime-bootstrapping.html">bootstrapping</a> code.</p>
+<p>For example, if you want to customize <a href="yii-widgets-linkpager.html">yii\widgets\LinkPager</a> so that ALL link pagers will show at most 5 page buttons
+(the default value is 10), you may use the following code to achieve this goal:</p>
+<pre><code class="hljs php language-php">\Yii::<span class="hljs-variable">$container</span>-&gt;set(<span class="hljs-string">'yii\widgets\LinkPager'</span>, [
+    <span class="hljs-string">'maxButtonCount'</span> =&gt; <span class="hljs-number">5</span>,
+]);
+</code></pre>
+<p>Without using default configurations, you would have to configure <code>maxButtonCount</code> in every place where you use
+link pagers.</p>
+<h2>Environment Constants  <span id="environment-constants"></span><a href="#environment-constants" class="hashlink">&para;</a></h2><p>Configurations often vary according to the environment in which an application runs. For example,
+in development environment, you may want to use a database named <code>mydb_dev</code>, while on production server
+you may want to use the <code>mydb_prod</code> database. To facilitate switching environments, Yii provides a constant
+named <code>YII_ENV</code> that you may define in the <a href="guide-structure-entry-scripts.html">entry script</a> of your application.
+For example,</p>
+<pre><code class="hljs php language-php">defined(<span class="hljs-string">'YII_ENV'</span>) <span class="hljs-keyword">or</span> define(<span class="hljs-string">'YII_ENV'</span>, <span class="hljs-string">'dev'</span>);
+</code></pre>
+<p>You may define <code>YII_ENV</code> as one of the following values:</p>
+<ul>
+<li><code>prod</code>: production environment. The constant <code>YII_ENV_PROD</code> will evaluate as <code>true</code>.
+This is the default value of <code>YII_ENV</code> if you do not define it.</li>
+<li><code>dev</code>: development environment. The constant <code>YII_ENV_DEV</code> will evaluate as <code>true</code>.</li>
+<li><code>test</code>: testing environment. The constant <code>YII_ENV_TEST</code> will evaluate as <code>true</code>.</li>
+</ul>
+<p>With these environment constants, you may specify your configurations conditionally based on
+the current environment. For example, your application configuration may contain the following
+code to enable the <a href="guide-tool-debugger.html">debug toolbar and debugger</a> in development environment.</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$config</span> = [...];
+
+<span class="hljs-keyword">if</span> (YII_ENV_DEV) {
+    <span class="hljs-comment">// configuration adjustments for 'dev' environment</span>
+    <span class="hljs-variable">$config</span>[<span class="hljs-string">'bootstrap'</span>][] = <span class="hljs-string">'debug'</span>;
+    <span class="hljs-variable">$config</span>[<span class="hljs-string">'modules'</span>][<span class="hljs-string">'debug'</span>] = <span class="hljs-string">'yii\debug\Module'</span>;
+}
+
+<span class="hljs-keyword">return</span> <span class="hljs-variable">$config</span>;
+</code></pre>

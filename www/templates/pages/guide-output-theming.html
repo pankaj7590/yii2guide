@@ -1,0 +1,81 @@
+
+        <h1>Theming <span id="theming"></span><a href="#theming" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#theming-modules">Theming Modules</a></li>
+<li><a href="#theming-widgets">Theming Widgets</a></li>
+<li><a href="#theme-inheritance">Theme Inheritance</a></li></ol></div>
+<p>Theming is a way to replace a set of <a href="guide-structure-views.html">views</a> with another without the need of touching
+the original view rendering code. You can use theming to systematically change the look and feel of an application.</p>
+<p>To use theming, you should configure the <a href="yii-base-view.html#$theme-detail">theme</a> property of the <code>view</code> application component.
+The property configures a <a href="yii-base-theme.html">yii\base\Theme</a> object which governs how view files are being replaced. You should
+mainly specify the following properties of <a href="yii-base-theme.html">yii\base\Theme</a>:</p>
+<ul>
+<li><a href="yii-base-theme.html#$basePath-detail">yii\base\Theme::$basePath</a>: specifies the base directory that contains the themed resources (CSS, JS, images, etc.)</li>
+<li><a href="yii-base-theme.html#$baseUrl-detail">yii\base\Theme::$baseUrl</a>: specifies the base URL of the themed resources.</li>
+<li><a href="yii-base-theme.html#$pathMap-detail">yii\base\Theme::$pathMap</a>: specifies the replacement rules of view files. More details will be given in the following
+subsections.</li>
+</ul>
+<p>For example, if you call <code>$this-&gt;render('about')</code> in <code>SiteController</code>, you will be rendering the view file
+<code>@app/views/site/about.php</code>. However, if you enable theming in the following application configuration,
+the view file <code>@app/themes/basic/site/about.php</code> will be rendered, instead. </p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'view'</span> =&gt; [
+            <span class="hljs-string">'theme'</span> =&gt; [
+                <span class="hljs-string">'basePath'</span> =&gt; <span class="hljs-string">'@app/themes/basic'</span>,
+                <span class="hljs-string">'baseUrl'</span> =&gt; <span class="hljs-string">'@web/themes/basic'</span>,
+                <span class="hljs-string">'pathMap'</span> =&gt; [
+                    <span class="hljs-string">'@app/views'</span> =&gt; <span class="hljs-string">'@app/themes/basic'</span>,
+                ],
+            ],
+        ],
+    ],
+];
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>Path aliases are supported by themes. When doing view replacement, path aliases will be turned into 
+  the actual file paths or URLs.</p>
+</blockquote>
+<p>You can access the <a href="yii-base-theme.html">yii\base\Theme</a> object through the <a href="yii-base-view.html#$theme-detail">yii\base\View::$theme</a> property. For example,
+in a view file, you can write the following code because <code>$this</code> refers to the view object:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$theme</span> = <span class="hljs-variable">$this</span>-&gt;theme;
+
+<span class="hljs-comment">// returns: $theme-&gt;baseUrl . '/img/logo.gif'</span>
+<span class="hljs-variable">$url</span> = <span class="hljs-variable">$theme</span>-&gt;getUrl(<span class="hljs-string">'img/logo.gif'</span>);
+
+<span class="hljs-comment">// returns: $theme-&gt;basePath . '/img/logo.gif'</span>
+<span class="hljs-variable">$file</span> = <span class="hljs-variable">$theme</span>-&gt;getPath(<span class="hljs-string">'img/logo.gif'</span>);
+</code></pre>
+<p>The <a href="yii-base-theme.html#$pathMap-detail">yii\base\Theme::$pathMap</a> property governs how view files should be replaced. It takes an array of 
+key-value pairs, where the keys are the original view paths to be replaced and the values are the corresponding 
+themed view paths. The replacement is based on partial match: if a view path starts with any key in 
+the <a href="yii-base-theme.html#$pathMap-detail">pathMap</a> array, that matching part will be replaced with the corresponding array value.
+Using the above configuration example, because <code>@app/views/site/about.php</code> partially matches the key
+<code>@app/views</code>, it will be replaced as <code>@app/themes/basic/site/about.php</code>.</p>
+<h2>Theming Modules  <span id="theming-modules"></span><a href="#theming-modules" class="hashlink">&para;</a></h2><p>In order to theme modules, <a href="yii-base-theme.html#$pathMap-detail">yii\base\Theme::$pathMap</a> can be configured like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-string">'pathMap'</span> =&gt; [
+    <span class="hljs-string">'@app/views'</span> =&gt; <span class="hljs-string">'@app/themes/basic'</span>,
+    <span class="hljs-string">'@app/modules'</span> =&gt; <span class="hljs-string">'@app/themes/basic/modules'</span>, <span class="hljs-comment">// &lt;-- !!!</span>
+],
+</code></pre>
+<p>It will allow you to theme <code>@app/modules/blog/views/comment/index.php</code> into <code>@app/themes/basic/modules/blog/views/comment/index.php</code>.</p>
+<h2>Theming Widgets  <span id="theming-widgets"></span><a href="#theming-widgets" class="hashlink">&para;</a></h2><p>In order to theme widgets, you can configure <a href="yii-base-theme.html#$pathMap-detail">yii\base\Theme::$pathMap</a> in the following way:</p>
+<pre><code class="hljs php language-php"><span class="hljs-string">'pathMap'</span> =&gt; [
+    <span class="hljs-string">'@app/views'</span> =&gt; <span class="hljs-string">'@app/themes/basic'</span>,
+    <span class="hljs-string">'@app/widgets'</span> =&gt; <span class="hljs-string">'@app/themes/basic/widgets'</span>, <span class="hljs-comment">// &lt;-- !!!</span>
+],
+</code></pre>
+<p>This will allow you to theme <code>@app/widgets/currency/views/index.php</code> into <code>@app/themes/basic/widgets/currency/index.php</code>.</p>
+<h2>Theme Inheritance  <span id="theme-inheritance"></span><a href="#theme-inheritance" class="hashlink">&para;</a></h2><p>Sometimes you may want to define a basic theme which contains a basic look and feel of the application, and then
+based on the current holiday, you may want to vary the look and feel slightly. You can achieve this goal using
+theme inheritance which is done by mapping a single view path to multiple targets. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-string">'pathMap'</span> =&gt; [
+    <span class="hljs-string">'@app/views'</span> =&gt; [
+        <span class="hljs-string">'@app/themes/christmas'</span>,
+        <span class="hljs-string">'@app/themes/basic'</span>,
+    ],
+]
+</code></pre>
+<p>In this case, the view <code>@app/views/site/index.php</code> would be themed as either <code>@app/themes/christmas/site/index.php</code> 
+or <code>@app/themes/basic/site/index.php</code>, depending on which themed file exists. If both themed files exist, the first
+one will take precedence. In practice, you would keep most themed view files in <code>@app/themes/basic</code> and customize
+some of them in <code>@app/themes/christmas</code>.</p>
+        

@@ -1,0 +1,66 @@
+
+        <h1>Working with Client Scripts <span id="working-with-client-scripts"></span><a href="#working-with-client-scripts" class="hashlink">&para;</a></h1><blockquote class="note"><p><strong>Note: </strong>This section is under development.</p>
+</blockquote>
+<h3>Registering scripts <span id="registering-scripts"></span><a href="#registering-scripts" class="hashlink">&para;</a></h3><p>With the <a href="yii-web-view.html">yii\web\View</a> object you can register scripts. There are two dedicated methods for it:
+<a href="yii-web-view.html#registerJs()-detail">registerJs()</a> for inline scripts and
+<a href="yii-web-view.html#registerJsFile()-detail">registerJsFile()</a> for external scripts.
+Inline scripts are useful for configuration and dynamically generated code.
+The method for adding these can be used as follows:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$this</span>-&gt;registerJs(<span class="hljs-string">"var options = "</span>.json_encode(<span class="hljs-variable">$options</span>).<span class="hljs-string">";"</span>, View::POS_END, <span class="hljs-string">'my-options'</span>);
+</code></pre>
+<p>The first argument is the actual JS code we want to insert into the page. The second argument
+determines where script should be inserted into the page. Possible values are:</p>
+<ul>
+<li><a href="yii-web-view.html#POS_HEAD-detail">View::POS_HEAD</a> for head section.</li>
+<li><a href="yii-web-view.html#POS_BEGIN-detail">View::POS_BEGIN</a> for right after opening <code>&lt;body&gt;</code>.</li>
+<li><a href="yii-web-view.html#POS_END-detail">View::POS_END</a> for right before closing <code>&lt;/body&gt;</code>.</li>
+<li><a href="yii-web-view.html#POS_READY-detail">View::POS_READY</a> for executing code on document <code>ready</code> event. This will register <a href="yii-web-jqueryasset.html">jQuery</a> automatically.</li>
+<li><a href="yii-web-view.html#POS_LOAD-detail">View::POS_LOAD</a> for executing code on document <code>load</code> event. This will register <a href="yii-web-jqueryasset.html">jQuery</a> automatically.</li>
+</ul>
+<p>The last argument is a unique script ID that is used to identify code block and replace existing one with the same ID
+instead of adding a new one. If you don't provide it, the JS code itself will be used as the ID.</p>
+<p>An external script can be added like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$this</span>-&gt;registerJsFile(<span class="hljs-string">'http://example.com/js/main.js'</span>, [<span class="hljs-string">'depends'</span> =&gt; [\yii\web\JqueryAsset::className()]]);
+</code></pre>
+<p>The arguments for <a href="yii-web-view.html#registerJsFile()-detail">registerJsFile()</a> are similar to those for
+<a href="yii-web-view.html#registerCssFile()-detail">registerCssFile()</a>. In the above example,
+we register the <code>main.js</code> file with the dependency on <code>JqueryAsset</code>. This means the <code>main.js</code> file
+will be added AFTER <code>jquery.js</code>. Without this dependency specification, the relative order between
+<code>main.js</code> and <code>jquery.js</code> would be undefined.</p>
+<p>Like for <a href="yii-web-view.html#registerCssFile()-detail">registerCssFile()</a>, it is also highly recommended that you use
+<a href="guide-structure-assets.html">asset bundles</a> to register external JS files rather than using <a href="yii-web-view.html#registerJsFile()-detail">registerJsFile()</a>.</p>
+<h3>Registering asset bundles <span id="registering-asset-bundles"></span><a href="#registering-asset-bundles" class="hashlink">&para;</a></h3><p>As was mentioned earlier it's preferred to use asset bundles instead of using CSS and JavaScript directly. You can get
+details on how to define asset bundles in <a href="guide-structure-assets.html">asset manager</a> section of the guide. As for using already defined
+asset bundle, it's very straightforward:</p>
+<pre><code class="hljs php language-php">\frontend\assets\AppAsset::register(<span class="hljs-variable">$this</span>);
+</code></pre>
+<h3>Registering CSS <span id="registering-css"></span><a href="#registering-css" class="hashlink">&para;</a></h3><p>You can register CSS using <a href="yii-web-view.html#registerCss()-detail">registerCss()</a> or <a href="yii-web-view.html#registerCssFile()-detail">registerCssFile()</a>.
+The former registers a block of CSS code while the latter registers an external CSS file. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$this</span>-&gt;registerCss(<span class="hljs-string">"body { background: #f00; }"</span>);
+</code></pre>
+<p>The code above will result in adding the following to the head section of the page:</p>
+<pre><code class="hljs xml language-html"><span class="hljs-tag">&lt;<span class="hljs-title">style</span>&gt;</span><span class="css">
+<span class="hljs-tag">body</span> <span class="hljs-rules">{ <span class="hljs-rule"><span class="hljs-attribute">background</span>:<span class="hljs-value"> <span class="hljs-hexcolor">#f00</span></span></span>; }</span>
+</span><span class="hljs-tag">&lt;/<span class="hljs-title">style</span>&gt;</span>
+</code></pre>
+<p>If you want to specify additional properties of the style tag, pass an array of name-values to the third argument.
+If you need to make sure there's only a single style tag use fourth argument as was mentioned in meta tags description.</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$this</span>-&gt;registerCssFile(<span class="hljs-string">"http://example.com/css/themes/black-and-white.css"</span>, [
+    <span class="hljs-string">'depends'</span> =&gt; [BootstrapAsset::className()],
+    <span class="hljs-string">'media'</span> =&gt; <span class="hljs-string">'print'</span>,
+], <span class="hljs-string">'css-print-theme'</span>);
+</code></pre>
+<p>The code above will add a link to CSS file to the head section of the page.</p>
+<ul>
+<li>The first argument specifies the CSS file to be registered.</li>
+<li>The second argument specifies the HTML attributes for the resulting <code>&lt;link&gt;</code> tag. The option <code>depends</code>
+is specially handled. It specifies which asset bundles this CSS file depends on. In this case, the dependent
+asset bundle is <a href="yii-bootstrap-bootstrapasset.html">BootstrapAsset</a>. This means the CSS file will be added
+<em>after</em> the CSS files in <a href="yii-bootstrap-bootstrapasset.html">BootstrapAsset</a>.</li>
+<li>The last argument specifies an ID identifying this CSS file. If it is not provided, the URL of the CSS file will be
+used instead.</li>
+</ul>
+<p>It is highly recommended that you use <a href="guide-structure-assets.html">asset bundles</a> to register external CSS files rather than
+using <a href="yii-web-view.html#registerCssFile()-detail">registerCssFile()</a>. Using asset bundles allows you to combine and compress
+multiple CSS files, which is desirable for high traffic websites.</p>
+        

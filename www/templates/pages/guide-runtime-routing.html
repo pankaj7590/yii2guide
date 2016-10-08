@@ -1,0 +1,558 @@
+
+        <h1>Routing and URL Creation <span id="routing-and-url-creation"></span><a href="#routing-and-url-creation" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#url-formats">URL Formats</a></li>
+<li><a href="#routing">Routing</a></li>
+<li><a href="#creating-urls">Creating URLs</a></li>
+<li><a href="#using-pretty-urls">Using Pretty URLs</a></li>
+<li><a href="#performance-consideration">Performance Consideration</a></li></ol></div>
+<p>When a Yii application starts processing a requested URL, the first step it takes is to parse the URL
+into a <a href="guide-structure-controllers.html#routes">route</a>. The route is then used to instantiate the corresponding
+<a href="guide-structure-controllers.html">controller action</a> to handle the request. This whole process is called <em>routing</em>.</p>
+<p>The reverse process of routing is called <em>URL creation</em>, which creates a URL from a given route
+and the associated query parameters. When the created URL is later requested, the routing process can resolve it
+back into the original route and query parameters.</p>
+<p>The central piece responsible for routing and URL creation is the <a href="yii-web-urlmanager.html">URL manager</a>,
+which is registered as the <code>urlManager</code> <a href="guide-structure-application-components.html">application component</a>. The <a href="yii-web-urlmanager.html">URL manager</a>
+provides the <a href="yii-web-urlmanager.html#parseRequest()-detail">parseRequest()</a> method to parse an incoming request into
+a route and the associated query parameters and the <a href="yii-web-urlmanager.html#createUrl()-detail">createUrl()</a> method to
+create a URL from a given route and its associated query parameters.</p>
+<p>By configuring the <code>urlManager</code> component in the application configuration, you can let your application
+recognize arbitrary URL formats without modifying your existing application code. For example, you can
+use the following code to create a URL for the <code>post/view</code> action:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Url</span>;
+
+<span class="hljs-comment">// Url::to() calls UrlManager::createUrl() to create a URL</span>
+<span class="hljs-variable">$url</span> = Url::to([<span class="hljs-string">'post/view'</span>, <span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">100</span>]);
+</code></pre>
+<p>Depending on the <code>urlManager</code> configuration, the created URL may look like one of the following (or other format).
+And if the created URL is requested later, it will still be parsed back into the original route and query parameter value.</p>
+<pre><code class="hljs ">/index.php?r=post%2Fview&amp;id=100
+/index.php/post/100
+/posts/100
+</code></pre>
+<h2>URL Formats  <span id="url-formats"></span><a href="#url-formats" class="hashlink">&para;</a></h2><p>The <a href="yii-web-urlmanager.html">URL manager</a> supports two URL formats:</p>
+<ul>
+<li>the default URL format;</li>
+<li>the pretty URL format.</li>
+</ul>
+<p>The default URL format uses a query parameter named <code>r</code> to represent the route and normal query parameters
+to represent the query parameters associated with the route. For example, the URL <code>/index.php?r=post/view&amp;id=100</code> represents
+the route <code>post/view</code> and the <code>id</code> query parameter <code>100</code>. The default URL format does not require any configuration of
+the <a href="yii-web-urlmanager.html">URL manager</a> and works in any Web server setup.</p>
+<p>The pretty URL format uses the extra path following the entry script name to represent the route and the associated
+query parameters. For example, the extra path in the URL <code>/index.php/post/100</code> is <code>/post/100</code> which may represent
+the route <code>post/view</code> and the <code>id</code> query parameter <code>100</code> with a proper <a href="yii-web-urlmanager.html#$rules-detail">URL rule</a>. To use
+the pretty URL format, you will need to design a set of <a href="yii-web-urlmanager.html#$rules-detail">URL rules</a> according to the actual
+requirement about how the URLs should look like.</p>
+<p>You may switch between the two URL formats by toggling the <a href="yii-web-urlmanager.html#$enablePrettyUrl-detail">enablePrettyUrl</a>
+property of the <a href="yii-web-urlmanager.html">URL manager</a> without changing any other application code.</p>
+<h2>Routing  <span id="routing"></span><a href="#routing" class="hashlink">&para;</a></h2><p>Routing involves two steps:</p>
+<ul>
+<li>the incoming request is parsed into a route and the associated query parameters;</li>
+<li>a <a href="guide-structure-controllers.html#actions">controller action</a> corresponding to the parsed route
+is created to handle the request.</li>
+</ul>
+<p>When using the default URL format, parsing a request into a route is as simple as getting the value of a <code>GET</code>
+query parameter named <code>r</code>.</p>
+<p>When using the pretty URL format, the <a href="yii-web-urlmanager.html">URL manager</a> will examine the registered
+<a href="yii-web-urlmanager.html#$rules-detail">URL rules</a> to find matching one that can resolve the request into a route.
+If such a rule cannot be found, a <a href="yii-web-notfoundhttpexception.html">yii\web\NotFoundHttpException</a> exception will be thrown.</p>
+<p>Once the request is parsed into a route, it is time to create the controller action identified by the route.
+The route is broken down into multiple parts by the slashes in it. For example, <code>site/index</code> will be
+broken into <code>site</code> and <code>index</code>. Each part is an ID which may refer to a module, a controller or an action.
+Starting from the first part in the route, the application takes the following steps to create modules (if any),
+controller and action:</p>
+<ol>
+<li>Set the application as the current module.</li>
+<li>Check if the <a href="yii-base-module.html#$controllerMap-detail">controller map</a> of the current module contains the current ID.
+If so, a controller object will be created according to the controller configuration found in the map,
+and Step 5 will be taken to handle the rest part of the route.</li>
+<li>Check if the ID refers to a module listed in the <a href="yii-base-module.html#$modules-detail">modules</a> property of
+the current module. If so, a module is created according to the configuration found in the module list,
+and Step 2 will be taken to handle the next part of the route under the context of the newly created module.</li>
+<li>Treat the ID as a <a href="guide-structure-controllers.html#controller-ids">controller ID</a> and create a controller object. Do the next step with the rest part of
+the route.</li>
+<li>The controller looks for the current ID in its <a href="yii-base-controller.html#actions()-detail">action map</a>. If found,
+it creates an action according to the configuration found in the map. Otherwise, the controller will
+attempt to create an inline action which is defined by an action method corresponding to the current <a href="guide-structure-controllers.html#action-ids">action ID</a>.</li>
+</ol>
+<p>Among the above steps, if any error occurs, a <a href="yii-web-notfoundhttpexception.html">yii\web\NotFoundHttpException</a> will be thrown, indicating
+the failure of the routing process.</p>
+<h3>Default Route  <span id="default-route"></span><a href="#default-route" class="hashlink">&para;</a></h3><p>When a request is parsed into an empty route, the so-called <em>default route</em> will be used, instead. By default,
+the default route is <code>site/index</code>,  which refers to the <code>index</code> action of the <code>site</code> controller. You may
+customize it by configuring the <a href="yii-web-application.html#$defaultRoute-detail">defaultRoute</a> property of the application
+in the application configuration like the following:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// ...</span>
+    <span class="hljs-string">'defaultRoute'</span> =&gt; <span class="hljs-string">'main/index'</span>,
+];
+</code></pre>
+<p>Similar to the default route of the application, there is also a default route for modules, so for example if there
+is a <code>user</code> module and the request is parsed into the route <code>user</code> the module's <a href="yii-base-module.html#$defaultRoute-detail">defaultRoute</a>
+is used to determine the controller. By default the controller name is <code>default</code>. If no action is specified in <a href="yii-base-module.html#$defaultRoute-detail">defaultRoute</a>,
+the <a href="yii-base-controller.html#$defaultAction-detail">defaultAction</a> property of the controller is used to determine the action.
+In this example, the full route would be <code>user/default/index</code>.</p>
+<h3><code>catchAll</code> Route  <span id="catchall-route"></span><a href="#catchall-route" class="hashlink">&para;</a></h3><p>Sometimes, you may want to put your Web application in maintenance mode temporarily and display the same
+informational page for all requests. There are many ways to accomplish this goal. But one of the simplest
+ways is to configure the <a href="yii-web-application.html#$catchAll-detail">yii\web\Application::$catchAll</a> property like the following in the application configuration:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// ...</span>
+    <span class="hljs-string">'catchAll'</span> =&gt; [<span class="hljs-string">'site/offline'</span>],
+];
+</code></pre>
+<p>With the above configuration, the <code>site/offline</code> action will be used to handle all incoming requests.</p>
+<p>The <code>catchAll</code> property should take an array whose first element specifies a route, and
+the rest of the elements (name-value pairs) specify the parameters to be <a href="guide-structure-controllers.html#action-parameters">bound to the action</a>.</p>
+<blockquote class="info"><p><strong>Info: </strong>Debug panel on development environment will not work when this property is enabled</p>
+</blockquote>
+<h2>Creating URLs  <span id="creating-urls"></span><a href="#creating-urls" class="hashlink">&para;</a></h2><p>Yii provides a helper method <a href="yii-helpers-baseurl.html#to()-detail">yii\helpers\Url::to()</a> to create various kinds of URLs from given routes and
+their associated query parameters. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Url</span>;
+
+<span class="hljs-comment">// creates a URL to a route: /index.php?r=post%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'post/index'</span>]);
+
+<span class="hljs-comment">// creates a URL to a route with parameters: /index.php?r=post%2Fview&amp;id=100</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'post/view'</span>, <span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">100</span>]);
+
+<span class="hljs-comment">// creates an anchored URL: /index.php?r=post%2Fview&amp;id=100#content</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'post/view'</span>, <span class="hljs-string">'id'</span> =&gt; <span class="hljs-number">100</span>, <span class="hljs-string">'#'</span> =&gt; <span class="hljs-string">'content'</span>]);
+
+<span class="hljs-comment">// creates an absolute URL: http://www.example.com/index.php?r=post%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'post/index'</span>], <span class="hljs-keyword">true</span>);
+
+<span class="hljs-comment">// creates an absolute URL using the https scheme: https://www.example.com/index.php?r=post%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'post/index'</span>], <span class="hljs-string">'https'</span>);
+</code></pre>
+<p>Note that in the above example, we assume the default URL format is being used. If the pretty URL format is enabled,
+the created URLs will be different, according to the <a href="yii-web-urlmanager.html#$rules-detail">URL rules</a> in use.</p>
+<p>The route passed to the <a href="yii-helpers-baseurl.html#to()-detail">yii\helpers\Url::to()</a> method is context sensitive. It can be either a <em>relative</em> route
+or an <em>absolute</em> route which will be normalized according to the following rules:</p>
+<ul>
+<li>If the route is an empty string, the currently requested <a href="yii-base-controller.html#$route-detail">route</a> will be used;</li>
+<li>If the route contains no slashes at all, it is considered to be an action ID of the current controller
+and will be prepended with the <a href="yii-base-controller.html#$uniqueId-detail">uniqueId</a> value of the current controller;</li>
+<li>If the route has no leading slash, it is considered to be a route relative to the current module and
+will be prepended with the <a href="yii-base-module.html#$uniqueId-detail">uniqueId</a> value of the current module.</li>
+</ul>
+<p>Starting from version 2.0.2, you may specify a route in terms of an <a href="guide-concept-aliases.html">alias</a>. If this is the case,
+the alias will first be converted into the actual route which will then be turned into an absolute route according
+to the above rules.</p>
+<p>For example, assume the current module is <code>admin</code> and the current controller is <code>post</code>,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Url</span>;
+
+<span class="hljs-comment">// currently requested route: /index.php?r=admin%2Fpost%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">''</span>]);
+
+<span class="hljs-comment">// a relative route with action ID only: /index.php?r=admin%2Fpost%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'index'</span>]);
+
+<span class="hljs-comment">// a relative route: /index.php?r=admin%2Fpost%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'post/index'</span>]);
+
+<span class="hljs-comment">// an absolute route: /index.php?r=post%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'/post/index'</span>]);
+
+<span class="hljs-comment">// /index.php?r=post%2Findex     assume the alias "@posts" is defined as "/post/index"</span>
+<span class="hljs-keyword">echo</span> Url::to([<span class="hljs-string">'@posts'</span>]);
+</code></pre>
+<p>The <a href="yii-helpers-baseurl.html#to()-detail">yii\helpers\Url::to()</a> method is implemented by calling the <a href="yii-web-urlmanager.html#createUrl()-detail">createUrl()</a>
+and <a href="yii-web-urlmanager.html#createAbsoluteUrl()-detail">createAbsoluteUrl()</a> methods of the <a href="yii-web-urlmanager.html">URL manager</a>.
+In the next few subsections, we will explain how to configure the <a href="yii-web-urlmanager.html">URL manager</a> to customize
+the format of the created URLs.</p>
+<p>The <a href="yii-helpers-baseurl.html#to()-detail">yii\helpers\Url::to()</a> method also supports creating URLs that are NOT related with particular routes.
+Instead of passing an array as its first parameter, you should pass a string in this case. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Url</span>;
+
+<span class="hljs-comment">// currently requested URL: /index.php?r=admin%2Fpost%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::to();
+
+<span class="hljs-comment">// an aliased URL: http://example.com</span>
+Yii::setAlias(<span class="hljs-string">'@example'</span>, <span class="hljs-string">'http://example.com/'</span>);
+<span class="hljs-keyword">echo</span> Url::to(<span class="hljs-string">'@example'</span>);
+
+<span class="hljs-comment">// an absolute URL: http://example.com/images/logo.gif</span>
+<span class="hljs-keyword">echo</span> Url::to(<span class="hljs-string">'/images/logo.gif'</span>, <span class="hljs-keyword">true</span>);
+</code></pre>
+<p>Besides the <code>to()</code> method, the <a href="yii-helpers-url.html">yii\helpers\Url</a> helper class also provides several other convenient URL creation
+methods. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Url</span>;
+
+<span class="hljs-comment">// home page URL: /index.php?r=site%2Findex</span>
+<span class="hljs-keyword">echo</span> Url::home();
+
+<span class="hljs-comment">// the base URL, useful if the application is deployed in a sub-folder of the Web root</span>
+<span class="hljs-keyword">echo</span> Url::base();
+
+<span class="hljs-comment">// the canonical URL of the currently requested URL</span>
+<span class="hljs-comment">// see https://en.wikipedia.org/wiki/Canonical_link_element</span>
+<span class="hljs-keyword">echo</span> Url::canonical();
+
+<span class="hljs-comment">// remember the currently requested URL and retrieve it back in later requests</span>
+Url::remember();
+<span class="hljs-keyword">echo</span> Url::previous();
+</code></pre>
+<h2>Using Pretty URLs  <span id="using-pretty-urls"></span><a href="#using-pretty-urls" class="hashlink">&para;</a></h2><p>To use pretty URLs, configure the <code>urlManager</code> component in the application configuration like the following:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'urlManager'</span> =&gt; [
+            <span class="hljs-string">'enablePrettyUrl'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'showScriptName'</span> =&gt; <span class="hljs-keyword">false</span>,
+            <span class="hljs-string">'enableStrictParsing'</span> =&gt; <span class="hljs-keyword">false</span>,
+            <span class="hljs-string">'rules'</span> =&gt; [
+                <span class="hljs-comment">// ...</span>
+            ],
+        ],
+    ],
+]
+</code></pre>
+<p>The <a href="yii-web-urlmanager.html#$enablePrettyUrl-detail">enablePrettyUrl</a> property is mandatory as it toggles the pretty URL format.
+The rest of the properties are optional. However, their configuration shown above is most commonly used.</p>
+<ul>
+<li><a href="yii-web-urlmanager.html#$showScriptName-detail">showScriptName</a>: this property determines whether the entry script
+should be included in the created URLs. For example, instead of creating a URL <code>/index.php/post/100</code>,
+by setting this property to be <code>false</code>, a URL <code>/post/100</code> will be generated.</li>
+<li><a href="yii-web-urlmanager.html#$enableStrictParsing-detail">enableStrictParsing</a>: this property determines whether to enable
+strict request parsing. If strict parsing is enabled, the incoming requested URL must match at least one of
+the <a href="yii-web-urlmanager.html#$rules-detail">rules</a> in order to be treated as a valid request, or a <a href="yii-web-notfoundhttpexception.html">yii\web\NotFoundHttpException</a>
+will be thrown. If strict parsing is disabled, when none of the <a href="yii-web-urlmanager.html#$rules-detail">rules</a> matches
+the requested URL, the path info part of the URL will be treated as the requested route.</li>
+<li><a href="yii-web-urlmanager.html#$rules-detail">rules</a>: this property contains a list of rules specifying how to parse and create
+URLs. It is the main property that you should work with in order to create URLs whose format satisfies your
+particular application requirement.</li>
+</ul>
+<blockquote class="note"><p><strong>Note: </strong>In order to hide the entry script name in the created URLs, besides setting
+  <a href="yii-web-urlmanager.html#$showScriptName-detail">showScriptName</a> to be <code>false</code>, you may also need to configure your Web server
+  so that it can correctly identify which PHP script should be executed when a requested URL does not explicitly
+  specify one. If you are using Apache Web server, you may refer to the recommended configuration as described in the
+  <a href="guide-start-installation.html#recommended-apache-configuration">Installation</a> section.</p>
+</blockquote>
+<h3>URL Rules  <span id="url-rules"></span><a href="#url-rules" class="hashlink">&para;</a></h3><p>A URL rule is an instance of <a href="yii-web-urlrule.html">yii\web\UrlRule</a> or its child class. Each URL rule consists of a pattern used
+for matching the path info part of URLs, a route, and a few query parameters. A URL rule can be used to parse a request
+if its pattern matches the requested URL. A URL rule can be used to create a URL if its route and query parameter
+names match those that are given.</p>
+<p>When the pretty URL format is enabled, the <a href="yii-web-urlmanager.html">URL manager</a> uses the URL rules declared in its
+<a href="yii-web-urlmanager.html#$rules-detail">rules</a> property to parse incoming requests and create URLs. In particular,
+to parse an incoming request, the <a href="yii-web-urlmanager.html">URL manager</a> examines the rules in the order they are
+declared and looks for the <em>first</em> rule that matches the requested URL. The matching rule is then used to
+parse the URL into a route and its associated parameters. Similarly, to create a URL, the <a href="yii-web-urlmanager.html">URL manager</a>
+looks for the first rule that matches the given route and parameters and uses that to create a URL.</p>
+<p>You can configure <a href="yii-web-urlmanager.html#$rules-detail">yii\web\UrlManager::$rules</a> as an array with keys being the patterns and values the corresponding
+routes. Each pattern-route pair constructs a URL rule. For example, the following <a href="yii-web-urlmanager.html#$rules-detail">rules</a>
+configuration declares two URL rules. The first rule matches a URL <code>posts</code> and maps it into the route <code>post/index</code>.
+The second rule matches a URL matching the regular expression <code>post/(\d+)</code> and maps it into the route <code>post/view</code> and
+a parameter named <code>id</code>.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'posts'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+    <span class="hljs-string">'post/&lt;id:\d+&gt;'</span> =&gt; <span class="hljs-string">'post/view'</span>,
+]
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>The pattern in a rule is used to match the path info part of a URL. For example, the path info of
+  <code>/index.php/post/100?source=ad</code> is <code>post/100</code> (the leading and ending slashes are ignored) which matches
+  the pattern <code>post/(\d+)</code>.</p>
+</blockquote>
+<p>Besides declaring URL rules as pattern-route pairs, you may also declare them as configuration arrays. Each configuration
+array is used to configure a single URL rule object. This is often needed when you want to configure other
+properties of a URL rule. For example,</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// ...other url rules...</span>
+
+    [
+        <span class="hljs-string">'pattern'</span> =&gt; <span class="hljs-string">'posts'</span>,
+        <span class="hljs-string">'route'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+        <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'.json'</span>,
+    ],
+]
+</code></pre>
+<p>By default if you do not specify the <code>class</code> option for a rule configuration, it will take the default
+class <a href="yii-web-urlrule.html">yii\web\UrlRule</a>.</p>
+<h3>Named Parameters  <span id="named-parameters"></span><a href="#named-parameters" class="hashlink">&para;</a></h3><p>A URL rule can be associated with a few named query parameters which are specified in the pattern in the format
+of <code>&lt;ParamName:RegExp&gt;</code>, where <code>ParamName</code> specifies the parameter name and <code>RegExp</code> is an optional regular
+expression used to match parameter values. If <code>RegExp</code> is not specified, it means the parameter value should be
+a string without any slash.</p>
+<blockquote class="note"><p><strong>Note: </strong>You can only specify regular expressions for parameters. The rest part of a pattern is considered as plain text.</p>
+</blockquote>
+<p>When a rule is used to parse a URL, it will fill the associated parameters with values matching the corresponding
+parts of the URL, and these parameters will be made available in <code>$_GET</code> later by the <code>request</code> application component.
+When the rule is used to create a URL, it will take the values of the provided parameters and insert them at the
+places where the parameters are declared.</p>
+<p>Let's use some examples to illustrate how named parameters work. Assume we have declared the following three URL rules:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'posts/&lt;year:\d{4}&gt;/&lt;category&gt;'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+    <span class="hljs-string">'posts'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+    <span class="hljs-string">'post/&lt;id:\d+&gt;'</span> =&gt; <span class="hljs-string">'post/view'</span>,
+]
+</code></pre>
+<p>When the rules are used to parse URLs:</p>
+<ul>
+<li><code>/index.php/posts</code> is parsed into the route <code>post/index</code> using the second rule;</li>
+<li><code>/index.php/posts/2014/php</code> is parsed into the route <code>post/index</code>, the <code>year</code> parameter whose value is 2014
+and the <code>category</code> parameter whose value is <code>php</code> using the first rule;</li>
+<li><code>/index.php/post/100</code> is parsed into the route <code>post/view</code> and the <code>id</code> parameter whose value is 100 using
+the third rule;</li>
+<li><code>/index.php/posts/php</code> will cause a <a href="yii-web-notfoundhttpexception.html">yii\web\NotFoundHttpException</a> when <a href="yii-web-urlmanager.html#$enableStrictParsing-detail">yii\web\UrlManager::$enableStrictParsing</a>
+is <code>true</code>, because it matches none of the patterns. If <a href="yii-web-urlmanager.html#$enableStrictParsing-detail">yii\web\UrlManager::$enableStrictParsing</a> is <code>false</code> (the
+default value), the path info part <code>posts/php</code> will be returned as the route.</li>
+</ul>
+<p>And when the rules are used to create URLs:</p>
+<ul>
+<li><code>Url::to(['post/index'])</code> creates <code>/index.php/posts</code> using the second rule;</li>
+<li><code>Url::to(['post/index', 'year' =&gt; 2014, 'category' =&gt; 'php'])</code> creates <code>/index.php/posts/2014/php</code> using the first rule;</li>
+<li><code>Url::to(['post/view', 'id' =&gt; 100])</code> creates <code>/index.php/post/100</code> using the third rule;</li>
+<li><code>Url::to(['post/view', 'id' =&gt; 100, 'source' =&gt; 'ad'])</code> creates <code>/index.php/post/100?source=ad</code> using the third rule.
+Because the <code>source</code> parameter is not specified in the rule, it is appended as a query parameter in the created URL.</li>
+<li><code>Url::to(['post/index', 'category' =&gt; 'php'])</code> creates <code>/index.php/post/index?category=php</code> using none of the rules.
+Note that since none of the rules applies, the URL is created by simply appending the route as the path info
+and all parameters as the query string part.</li>
+</ul>
+<h3>Parameterizing Routes  <span id="parameterizing-routes"></span><a href="#parameterizing-routes" class="hashlink">&para;</a></h3><p>You can embed parameter names in the route of a URL rule. This allows a URL rule to be used for matching multiple
+routes. For example, the following rules embed <code>controller</code> and <code>action</code> parameters in the routes.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'&lt;controller:(post|comment)&gt;/&lt;id:\d+&gt;/&lt;action:(create|update|delete)&gt;'</span> =&gt; <span class="hljs-string">'&lt;controller&gt;/&lt;action&gt;'</span>,
+    <span class="hljs-string">'&lt;controller:(post|comment)&gt;/&lt;id:\d+&gt;'</span> =&gt; <span class="hljs-string">'&lt;controller&gt;/view'</span>,
+    <span class="hljs-string">'&lt;controller:(post|comment)&gt;s'</span> =&gt; <span class="hljs-string">'&lt;controller&gt;/index'</span>,
+]
+</code></pre>
+<p>To parse a URL <code>/index.php/comment/100/create</code>, the first rule will apply, which sets the <code>controller</code> parameter to
+be <code>comment</code> and <code>action</code> parameter to be <code>create</code>. The route <code>&lt;controller&gt;/&lt;action&gt;</code> is thus resolved as <code>comment/create</code>.</p>
+<p>Similarly, to create a URL for the route <code>comment/index</code>, the third rule will apply, which creates a URL <code>/index.php/comments</code>.</p>
+<blockquote class="info"><p><strong>Info: </strong>By parameterizing routes, it is possible to greatly reduce the number of URL rules, which can significantly
+  improve the performance of <a href="yii-web-urlmanager.html">URL manager</a>.</p>
+</blockquote>
+<p>By default, all parameters declared in a rule are required. If a requested URL does not contain a particular parameter,
+or if a URL is being created without a particular parameter, the rule will not apply. To make some of the parameters
+optional, you can configure the <a href="yii-web-urlrule.html#$defaults-detail">defaults</a> property of a rule. Parameters listed in this
+property are optional and will take the specified values when they are not provided.</p>
+<p>In the following rule declaration, the <code>page</code> and <code>tag</code> parameters are both optional and will take the value of 1 and
+empty string, respectively, when they are not provided.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// ...other rules...</span>
+    [
+        <span class="hljs-string">'pattern'</span> =&gt; <span class="hljs-string">'posts/&lt;page:\d+&gt;/&lt;tag&gt;'</span>,
+        <span class="hljs-string">'route'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+        <span class="hljs-string">'defaults'</span> =&gt; [<span class="hljs-string">'page'</span> =&gt; <span class="hljs-number">1</span>, <span class="hljs-string">'tag'</span> =&gt; <span class="hljs-string">''</span>],
+    ],
+]
+</code></pre>
+<p>The above rule can be used to parse or create any of the following URLs:</p>
+<ul>
+<li><code>/index.php/posts</code>: <code>page</code> is 1, <code>tag</code> is ''.</li>
+<li><code>/index.php/posts/2</code>: <code>page</code> is 2, <code>tag</code> is ''.</li>
+<li><code>/index.php/posts/2/news</code>: <code>page</code> is 2, <code>tag</code> is <code>'news'</code>.</li>
+<li><code>/index.php/posts/news</code>: <code>page</code> is 1, <code>tag</code> is <code>'news'</code>.</li>
+</ul>
+<p>Without using optional parameters, you would have to create 4 rules to achieve the same result.</p>
+<h3>Rules with Server Names  <span id="rules-with-server-names"></span><a href="#rules-with-server-names" class="hashlink">&para;</a></h3><p>It is possible to include Web server names in the patterns of URL rules. This is mainly useful when your application
+should behave differently for different Web server names. For example, the following rules will parse the URL
+<code>http://admin.example.com/login</code> into the route <code>admin/user/login</code> and <code>http://www.example.com/login</code> into <code>site/login</code>.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'http://admin.example.com/login'</span> =&gt; <span class="hljs-string">'admin/user/login'</span>,
+    <span class="hljs-string">'http://www.example.com/login'</span> =&gt; <span class="hljs-string">'site/login'</span>,
+]
+</code></pre>
+<p>You can also embed parameters in the server names to extract dynamic information from them. For example, the following rule
+will parse the URL <code>http://en.example.com/posts</code> into the route <code>post/index</code> and the parameter <code>language=en</code>.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'http://&lt;language:\w+&gt;.example.com/posts'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+]
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>Rules with server names should NOT include the subfolder of the entry script in their patterns. For example, if the application is under <code>http://www.example.com/sandbox/blog</code>, then you should use the pattern
+  <code>http://www.example.com/posts</code> instead of <code>http://www.example.com/sandbox/blog/posts</code>. This will allow your application
+  to be deployed under any directory without the need to change your application code.</p>
+</blockquote>
+<h3>URL Suffixes  <span id="url-suffixes"></span><a href="#url-suffixes" class="hashlink">&para;</a></h3><p>You may want to add suffixes to the URLs for various purposes. For example, you may add <code>.html</code> to the URLs so that they
+look like URLs for static HTML pages; you may also add <code>.json</code> to the URLs to indicate the expected content type
+of the response. You can achieve this goal by configuring the <a href="yii-web-urlmanager.html#$suffix-detail">yii\web\UrlManager::$suffix</a> property like
+the following in the application configuration:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'urlManager'</span> =&gt; [
+            <span class="hljs-string">'enablePrettyUrl'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'showScriptName'</span> =&gt; <span class="hljs-keyword">false</span>,
+            <span class="hljs-string">'enableStrictParsing'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'.html'</span>,
+            <span class="hljs-string">'rules'</span> =&gt; [
+                <span class="hljs-comment">// ...</span>
+            ],
+        ],
+    ],
+]
+</code></pre>
+<p>The above configuration will allow the <a href="yii-web-urlmanager.html">URL manager</a> to recognize requested URLs and also create
+URLs with <code>.html</code> as their suffix.</p>
+<blockquote class="tip"><p><strong>Tip: </strong>You may set <code>/</code> as the URL suffix so that the URLs all end with a slash.</p>
+</blockquote>
+<blockquote class="note"><p><strong>Note: </strong>When you configure a URL suffix, if a requested URL does not have the suffix, it will be considered as
+  an unrecognized URL. This is a recommended practice for SEO (search engine optimization).</p>
+</blockquote>
+<p>Sometimes you may want to use different suffixes for different URLs. This can be achieved by configuring the
+<a href="yii-web-urlrule.html#$suffix-detail">suffix</a> property of individual URL rules. When a URL rule has this property set, it will
+override the suffix setting at the <a href="yii-web-urlmanager.html">URL manager</a> level. For example, the following configuration
+contains a customized URL rule which uses <code>.json</code> as its suffix instead of the global one <code>.html</code>.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'urlManager'</span> =&gt; [
+            <span class="hljs-string">'enablePrettyUrl'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'showScriptName'</span> =&gt; <span class="hljs-keyword">false</span>,
+            <span class="hljs-string">'enableStrictParsing'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'.html'</span>,
+            <span class="hljs-string">'rules'</span> =&gt; [
+                <span class="hljs-comment">// ...</span>
+                [
+                    <span class="hljs-string">'pattern'</span> =&gt; <span class="hljs-string">'posts'</span>,
+                    <span class="hljs-string">'route'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+                    <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'.json'</span>,
+                ],
+            ],
+        ],
+    ],
+]
+</code></pre>
+<h3>URL normalization  <span id="url-normalization"></span><a href="#url-normalization" class="hashlink">&para;</a></h3><p>Since version 2.0.10 <a href="yii-web-urlmanager.html">UrlManager</a> can be configured to use <a href="yii-web-urlnormalizer.html">UrlNormalizer</a> for dealing
+with variations of the same URL with and without trailing slash. Because technically <code>http://example.com/path</code>
+and <code>http://example.com/path/</code> are different URLs, serving the same content for both of them can degrade SEO.
+By default normalizer collapses consecutive slashes, adds or removes trailing slashes depending on whether the
+suffix has a trailing slash or not, and redirects to the normalized version of the URL using <a href="https://en.wikipedia.org/wiki/HTTP_301">permanent redirection</a>.
+The normalizer can be configured globally for the URL manager or individually for each rule - by default each rule will use the normalizer
+from URL manager. You can set <a href="yii-web-urlrule.html#$normalizer-detail">UrlRule::$normalizer</a> to <code>false</code> to disable normalization
+for particular URL rule.</p>
+<p>The following shows an example configuration for the UrlNormalizer:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'urlManager'</span> =&gt; [
+            <span class="hljs-string">'enablePrettyUrl'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'showScriptName'</span> =&gt; <span class="hljs-keyword">false</span>,
+            <span class="hljs-string">'enableStrictParsing'</span> =&gt; <span class="hljs-keyword">true</span>,
+            <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'.html'</span>,
+            <span class="hljs-string">'normalizer'</span> =&gt; [
+                <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\web\UrlNormalizer'</span>,
+                <span class="hljs-string">'action'</span> =&gt; UrlNormalizer::ACTION_REDIRECT_TEMPORARY, <span class="hljs-comment">// use temporary redirection instead of permanent</span>
+            ],
+            <span class="hljs-string">'rules'</span> =&gt; [
+                <span class="hljs-comment">// ...</span>
+                [
+                    <span class="hljs-string">'pattern'</span> =&gt; <span class="hljs-string">'posts'</span>,
+                    <span class="hljs-string">'route'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+                    <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'/'</span>,
+                    <span class="hljs-string">'normalizer'</span> =&gt; <span class="hljs-keyword">false</span>, <span class="hljs-comment">// disable normalizer for this rule</span>
+                ],
+                [
+                    <span class="hljs-string">'pattern'</span> =&gt; <span class="hljs-string">'tags'</span>,
+                    <span class="hljs-string">'route'</span> =&gt; <span class="hljs-string">'tag/index'</span>,
+                    <span class="hljs-string">'normalizer'</span> =&gt; [
+                        <span class="hljs-string">'collapseSlashes'</span> =&gt; <span class="hljs-keyword">false</span>, <span class="hljs-comment">// do not collapse consecutive slashes for this rule</span>
+                    ],
+                ],
+            ],
+        ],
+    ],
+]
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>by default <a href="yii-web-urlmanager.html#$normalizer-detail">UrlManager::$normalizer</a> is disabled. You need to explicitly
+  configure it in order to enable URL normalization.</p>
+</blockquote>
+<h3>HTTP Methods  <span id="http-methods"></span><a href="#http-methods" class="hashlink">&para;</a></h3><p>When implementing RESTful APIs, it is commonly needed that the same URL be parsed into different routes according to
+the HTTP methods being used. This can be easily achieved by prefixing the supported HTTP methods to the patterns of
+the rules. If a rule supports multiple HTTP methods, separate the method names with commas. For example, the following
+rules have the same pattern <code>post/&lt;id:\d+&gt;</code> with different HTTP method support. A request for <code>PUT post/100</code> will
+be parsed into <code>post/create</code>, while a request for <code>GET post/100</code> will be parsed into <code>post/view</code>.</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'PUT,POST post/&lt;id:\d+&gt;'</span> =&gt; <span class="hljs-string">'post/create'</span>,
+    <span class="hljs-string">'DELETE post/&lt;id:\d+&gt;'</span> =&gt; <span class="hljs-string">'post/delete'</span>,
+    <span class="hljs-string">'post/&lt;id:\d+&gt;'</span> =&gt; <span class="hljs-string">'post/view'</span>,
+]
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>If a URL rule contains HTTP method(s) in its pattern, the rule will only be used for parsing purpose.
+  It will be skipped when the <a href="yii-web-urlmanager.html">URL manager</a> is called to create URLs.</p>
+</blockquote>
+<blockquote class="tip"><p><strong>Tip: </strong>To simplify the routing of RESTful APIs, Yii provides a special URL rule class <a href="yii-rest-urlrule.html">yii\rest\UrlRule</a>
+  which is very efficient and supports some fancy features such as automatic pluralization of controller IDs.
+  For more details, please refer to the <a href="guide-rest-routing.html">Routing</a> section about developing RESTful APIs.</p>
+</blockquote>
+<h3>Customizing Rules  <span id="customizing-rules"></span><a href="#customizing-rules" class="hashlink">&para;</a></h3><p>In the previous examples, URL rules are mainly declared in terms of pattern-route pairs. This is a commonly used
+shortcut format. In certain scenarios, you may want to customize a URL rule by configuring its other properties, such
+as <a href="yii-web-urlrule.html#$suffix-detail">yii\web\UrlRule::$suffix</a>. This can be done by using a full configuration array to specify a rule. The following
+example is extracted from the <a href="#url-suffixes">URL Suffixes</a> subsection,</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// ...other url rules...</span>
+
+    [
+        <span class="hljs-string">'pattern'</span> =&gt; <span class="hljs-string">'posts'</span>,
+        <span class="hljs-string">'route'</span> =&gt; <span class="hljs-string">'post/index'</span>,
+        <span class="hljs-string">'suffix'</span> =&gt; <span class="hljs-string">'.json'</span>,
+    ],
+]
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>By default if you do not specify the <code>class</code> option for a rule configuration, it will take the default
+  class <a href="yii-web-urlrule.html">yii\web\UrlRule</a>.</p>
+</blockquote>
+<h3>Adding Rules Dynamically  <span id="adding-rules"></span><a href="#adding-rules" class="hashlink">&para;</a></h3><p>URL rules can be dynamically added to the <a href="yii-web-urlmanager.html">URL manager</a>. This is often needed by redistributable
+<a href="guide-structure-modules.html">modules</a> which want to manage their own URL rules. In order for the dynamically added rules
+to take effect during the routing process, you should add them during the <a href="guide-runtime-bootstrapping.html">bootstrapping</a>
+stage. For modules, this means they should implement <a href="yii-base-bootstrapinterface.html">yii\base\BootstrapInterface</a> and add the rules in the
+<a href="yii-base-bootstrapinterface.html#bootstrap()-detail">bootstrap()</a> method like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">bootstrap</span><span class="hljs-params">(<span class="hljs-variable">$app</span>)</span>
+</span>{
+    <span class="hljs-variable">$app</span>-&gt;getUrlManager()-&gt;addRules([
+        <span class="hljs-comment">// rule declarations here</span>
+    ], <span class="hljs-keyword">false</span>);
+}
+</code></pre>
+<p>Note that you should also list these modules in <a href="yii-web-application.html#bootstrap()-detail">yii\web\Application::bootstrap()</a> so that they can participate the
+<a href="guide-runtime-bootstrapping.html">bootstrapping</a> process.</p>
+<h3>Creating Rule Classes  <span id="creating-rules"></span><a href="#creating-rules" class="hashlink">&para;</a></h3><p>Despite the fact that the default <a href="yii-web-urlrule.html">yii\web\UrlRule</a> class is flexible enough for the majority of projects, there
+are situations when you have to create your own rule classes. For example, in a car dealer Web site, you may want
+to support the URL format like <code>/Manufacturer/Model</code>, where both <code>Manufacturer</code> and <code>Model</code> must match some data
+stored in a database table. The default rule class will not work here because it relies on statically declared patterns.</p>
+<p>We can create the following URL rule class to solve this problem.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">components</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">UrlRuleInterface</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Object</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CarUrlRule</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Object</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">UrlRuleInterface</span>
+</span>{
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createUrl</span><span class="hljs-params">(<span class="hljs-variable">$manager</span>, <span class="hljs-variable">$route</span>, <span class="hljs-variable">$params</span>)</span>
+    </span>{
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$route</span> === <span class="hljs-string">'car/index'</span>) {
+            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$params</span>[<span class="hljs-string">'manufacturer'</span>], <span class="hljs-variable">$params</span>[<span class="hljs-string">'model'</span>])) {
+                <span class="hljs-keyword">return</span> <span class="hljs-variable">$params</span>[<span class="hljs-string">'manufacturer'</span>] . <span class="hljs-string">'/'</span> . <span class="hljs-variable">$params</span>[<span class="hljs-string">'model'</span>];
+            } <span class="hljs-keyword">elseif</span> (<span class="hljs-keyword">isset</span>(<span class="hljs-variable">$params</span>[<span class="hljs-string">'manufacturer'</span>])) {
+                <span class="hljs-keyword">return</span> <span class="hljs-variable">$params</span>[<span class="hljs-string">'manufacturer'</span>];
+            }
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;  <span class="hljs-comment">// this rule does not apply</span>
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseRequest</span><span class="hljs-params">(<span class="hljs-variable">$manager</span>, <span class="hljs-variable">$request</span>)</span>
+    </span>{
+        <span class="hljs-variable">$pathInfo</span> = <span class="hljs-variable">$request</span>-&gt;getPathInfo();
+        <span class="hljs-keyword">if</span> (preg_match(<span class="hljs-string">'%^(\w+)(/(\w+))?$%'</span>, <span class="hljs-variable">$pathInfo</span>, <span class="hljs-variable">$matches</span>)) {
+            <span class="hljs-comment">// check $matches[1] and $matches[3] to see</span>
+            <span class="hljs-comment">// if they match a manufacturer and a model in the database</span>
+            <span class="hljs-comment">// If so, set $params['manufacturer'] and/or $params['model']</span>
+            <span class="hljs-comment">// and return ['car/index', $params]</span>
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;  <span class="hljs-comment">// this rule does not apply</span>
+    }
+}
+</code></pre>
+<p>And use the new rule class in the <a href="yii-web-urlmanager.html#$rules-detail">yii\web\UrlManager::$rules</a> configuration:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// ...other rules...</span>
+
+    [
+        <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'app\components\CarUrlRule'</span>,
+        <span class="hljs-comment">// ...configure other properties...</span>
+    ],
+]
+</code></pre>
+<h2>Performance Consideration  <span id="performance-consideration"></span><a href="#performance-consideration" class="hashlink">&para;</a></h2><p>When developing a complex Web application, it is important to optimize URL rules so that it takes less time to parse
+requests and create URLs.</p>
+<p>By using parameterized routes, you may reduce the number of URL rules, which can significantly improve performance.</p>
+<p>When parsing or creating URLs, <a href="yii-web-urlmanager.html">URL manager</a> examines URL rules in the order they are declared.
+Therefore, you may consider adjusting the order of the URL rules so that more specific and/or more commonly used rules are placed before less used ones.</p>
+<p>If some URL rules share the same prefix in their patterns or routes, you may consider using <a href="yii-web-groupurlrule.html">yii\web\GroupUrlRule</a>
+so that they can be more efficiently examined by <a href="yii-web-urlmanager.html">URL manager</a> as a group. This is often the case
+when your application is composed by modules, each having its own set of URL rules with module ID as their common prefixes.</p>

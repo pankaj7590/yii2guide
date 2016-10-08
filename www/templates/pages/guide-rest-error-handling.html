@@ -1,0 +1,82 @@
+
+        <h1>Error Handling <span id="error-handling"></span><a href="#error-handling" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#customizing-error-response">Customizing Error Response</a></li></ol></div>
+<p>When handling a RESTful API request, if there is an error in the user request or if something unexpected
+happens on the server, you may simply throw an exception to notify the user that something went wrong.
+If you can identify the cause of the error (e.g., the requested resource does not exist), you should
+consider throwing an exception along with a proper HTTP status code (e.g., <a href="yii-web-notfoundhttpexception.html">yii\web\NotFoundHttpException</a>
+represents a 404 status code). Yii will send the response along with the corresponding HTTP status
+code and text. Yii will also include the serialized representation of the
+exception in the response body. For example:</p>
+<pre><code class="hljs http"><span class="hljs-status">HTTP/1.1 <span class="hljs-number">404</span> Not Found</span>
+<span class="hljs-attribute">Date</span>: <span class="hljs-string">Sun, 02 Mar 2014 05:31:43 GMT</span>
+<span class="hljs-attribute">Server</span>: <span class="hljs-string">Apache/2.2.26 (Unix) DAV/2 PHP/5.4.20 mod_ssl/2.2.26 OpenSSL/0.9.8y</span>
+<span class="hljs-attribute">Transfer-Encoding</span>: <span class="hljs-string">chunked</span>
+<span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json; charset=UTF-8</span>
+
+<span class="json">{
+    "<span class="hljs-attribute">name</span>": <span class="hljs-value"><span class="hljs-string">"Not Found Exception"</span></span>,
+    "<span class="hljs-attribute">message</span>": <span class="hljs-value"><span class="hljs-string">"The requested resource was not found."</span></span>,
+    "<span class="hljs-attribute">code</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+    "<span class="hljs-attribute">status</span>": <span class="hljs-value"><span class="hljs-number">404</span>
+</span>}
+</span></code></pre>
+<p>The following list summarizes the HTTP status codes that are used by the Yii REST framework:</p>
+<ul>
+<li><code>200</code>: OK. Everything worked as expected.</li>
+<li><code>201</code>: A resource was successfully created in response to a <code>POST</code> request. The <code>Location</code> header
+ contains the URL pointing to the newly created resource.</li>
+<li><code>204</code>: The request was handled successfully and the response contains no body content (like a <code>DELETE</code> request).</li>
+<li><code>304</code>: The resource was not modified. You can use the cached version.</li>
+<li><code>400</code>: Bad request. This could be caused by various actions by the user, such as providing invalid JSON
+ data in the request body, providing invalid action parameters, etc.</li>
+<li><code>401</code>: Authentication failed.</li>
+<li><code>403</code>: The authenticated user is not allowed to access the specified API endpoint.</li>
+<li><code>404</code>: The requested resource does not exist.</li>
+<li><code>405</code>: Method not allowed. Please check the <code>Allow</code> header for the allowed HTTP methods.</li>
+<li><code>415</code>: Unsupported media type. The requested content type or version number is invalid.</li>
+<li><code>422</code>: Data validation failed (in response to a <code>POST</code> request, for example). Please check the response body for detailed error messages.</li>
+<li><code>429</code>: Too many requests. The request was rejected due to rate limiting.</li>
+<li><code>500</code>: Internal server error. This could be caused by internal program errors.</li>
+</ul>
+<h2>Customizing Error Response  <span id="customizing-error-response"></span><a href="#customizing-error-response" class="hashlink">&para;</a></h2><p>Sometimes you may want to customize the default error response format. For example, instead of relying on
+using different HTTP statuses to indicate different errors, you would like to always use 200 as HTTP status
+and enclose the actual HTTP status code as part of the JSON structure in the response, like shown in the following,</p>
+<pre><code class="hljs http"><span class="hljs-status">HTTP/1.1 <span class="hljs-number">200</span> OK</span>
+<span class="hljs-attribute">Date</span>: <span class="hljs-string">Sun, 02 Mar 2014 05:31:43 GMT</span>
+<span class="hljs-attribute">Server</span>: <span class="hljs-string">Apache/2.2.26 (Unix) DAV/2 PHP/5.4.20 mod_ssl/2.2.26 OpenSSL/0.9.8y</span>
+<span class="hljs-attribute">Transfer-Encoding</span>: <span class="hljs-string">chunked</span>
+<span class="hljs-attribute">Content-Type</span>: <span class="hljs-string">application/json; charset=UTF-8</span>
+
+<span class="json">{
+    "<span class="hljs-attribute">success</span>": <span class="hljs-value"><span class="hljs-literal">false</span></span>,
+    "<span class="hljs-attribute">data</span>": <span class="hljs-value">{
+        "<span class="hljs-attribute">name</span>": <span class="hljs-value"><span class="hljs-string">"Not Found Exception"</span></span>,
+        "<span class="hljs-attribute">message</span>": <span class="hljs-value"><span class="hljs-string">"The requested resource was not found."</span></span>,
+        "<span class="hljs-attribute">code</span>": <span class="hljs-value"><span class="hljs-number">0</span></span>,
+        "<span class="hljs-attribute">status</span>": <span class="hljs-value"><span class="hljs-number">404</span>
+    </span>}
+</span>}
+</span></code></pre>
+<p>To achieve this goal, you can respond to the <code>beforeSend</code> event of the <code>response</code> component in the application configuration:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-comment">// ...</span>
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'response'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\web\Response'</span>,
+            <span class="hljs-string">'on beforeSend'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$event</span>)</span> </span>{
+                <span class="hljs-variable">$response</span> = <span class="hljs-variable">$event</span>-&gt;sender;
+                <span class="hljs-keyword">if</span> (<span class="hljs-variable">$response</span>-&gt;data !== <span class="hljs-keyword">null</span> &amp;&amp; Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;get(<span class="hljs-string">'suppress_response_code'</span>)) {
+                    <span class="hljs-variable">$response</span>-&gt;data = [
+                        <span class="hljs-string">'success'</span> =&gt; <span class="hljs-variable">$response</span>-&gt;isSuccessful,
+                        <span class="hljs-string">'data'</span> =&gt; <span class="hljs-variable">$response</span>-&gt;data,
+                    ];
+                    <span class="hljs-variable">$response</span>-&gt;statusCode = <span class="hljs-number">200</span>;
+                }
+            },
+        ],
+    ],
+];
+</code></pre>
+<p>The above code will reformat the response (for both successful and failed responses) as explained when
+<code>suppress_response_code</code> is passed as a <code>GET</code> parameter.</p>

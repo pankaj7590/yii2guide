@@ -1,0 +1,107 @@
+
+        <h1>Saying Hello <span id="saying-hello"></span><a href="#saying-hello" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#creating-action">Creating an Action</a></li>
+<li><a href="#creating-view">Creating a View</a></li>
+<li><a href="#trying-it-out">Trying it Out</a></li>
+<li><a href="#summary">Summary</a></li></ol></div>
+<p>This section describes how to create a new "Hello" page in your application.
+To achieve this goal, you will create an <a href="guide-structure-controllers.html#creating-actions">action</a> and
+a <a href="guide-structure-views.html">view</a>:</p>
+<ul>
+<li>The application will dispatch the page request to the action</li>
+<li>and the action will in turn render the view that shows the word "Hello" to the end user.</li>
+</ul>
+<p>Through this tutorial, you will learn three things:</p>
+<ol>
+<li>how to create an <a href="guide-structure-controllers.html#creating-actions">action</a> to respond to requests,</li>
+<li>how to create a <a href="guide-structure-views.html">view</a> to compose the response's content, and</li>
+<li>how an application dispatches requests to <a href="guide-structure-controllers.html#creating-actions">actions</a>.</li>
+</ol>
+<h2>Creating an Action  <span id="creating-action"></span><a href="#creating-action" class="hashlink">&para;</a></h2><p>For the "Hello" task, you will create a <code>say</code> <a href="guide-structure-controllers.html#creating-actions">action</a> that reads
+a <code>message</code> parameter from the request and displays that message back to the user. If the request
+does not provide a <code>message</code> parameter, the action will display the default "Hello" message.</p>
+<blockquote class="info"><p><strong>Info: </strong><a href="guide-structure-controllers.html#creating-actions">Actions</a> are the objects that end users can directly refer to for
+  execution. Actions are grouped by <a href="guide-structure-controllers.html">controllers</a>. The execution result of
+  an action is the response that an end user will receive.</p>
+</blockquote>
+<p>Actions must be declared in <a href="guide-structure-controllers.html">controllers</a>. For simplicity, you may
+declare the <code>say</code> action in the existing  <code>SiteController</code>. This controller is defined
+in the class file <code>controllers/SiteController.php</code>. Here is the start of the new action:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">controllers</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">Controller</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SiteController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-comment">// ...existing code...</span>
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionSay</span><span class="hljs-params">(<span class="hljs-variable">$message</span> = <span class="hljs-string">'Hello'</span>)</span>
+    </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;render(<span class="hljs-string">'say'</span>, [<span class="hljs-string">'message'</span> =&gt; <span class="hljs-variable">$message</span>]);
+    }
+}
+</code></pre>
+<p>In the above code, the <code>say</code> action is defined as a method named <code>actionSay</code> in the <code>SiteController</code> class.
+Yii uses the prefix <code>action</code> to differentiate action methods from non-action methods in a controller class.
+The name after the <code>action</code> prefix maps to the action's ID.</p>
+<p>When it comes to naming your actions, you should understand how Yii treats action IDs. Action IDs are always
+referenced in lower case. If an action ID requires multiple words, they will be concatenated by dashes
+(e.g., <code>create-comment</code>). Action method names are mapped to action IDs by removing any dashes from the IDs,
+capitalizing the first letter in each word, and prefixing the resulting string with <code>action</code>. For example,
+the action ID <code>create-comment</code> corresponds to the action method name <code>actionCreateComment</code>.</p>
+<p>The action method in our example takes a parameter <code>$message</code>, whose value defaults to <code>"Hello"</code> (in exactly
+the same way you set a default value for any function or method argument in PHP). When the application
+receives a request and determines that the <code>say</code> action is responsible for handling said request, the application will
+populate this parameter with the same named parameter found in the request. In other words, if the request includes
+a <code>message</code> parameter with a value of <code>"Goodbye"</code>, the <code>$message</code> variable within the action will be assigned that value.</p>
+<p>Within the action method, <a href="yii-base-controller.html#render()-detail">render()</a> is called to render
+a <a href="guide-structure-views.html">view</a> file named <code>say</code>. The <code>message</code> parameter is also passed to the view
+so that it can be used there. The rendering result is returned by the action method. That result will be received
+by the application and displayed to the end user in the browser (as part of a complete HTML page). </p>
+<h2>Creating a View  <span id="creating-view"></span><a href="#creating-view" class="hashlink">&para;</a></h2><p><a href="guide-structure-views.html">Views</a> are scripts you write to generate a response's content.
+For the "Hello" task, you will create a <code>say</code> view that prints the <code>message</code> parameter received from the action method:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-preprocessor">&lt;?</span>= Html::encode(<span class="hljs-variable">$message</span>) <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<p>The <code>say</code> view should be saved in the file <code>views/site/say.php</code>. When the method <a href="yii-base-controller.html#render()-detail">render()</a>
+is called in an action, it will look for a PHP file named as <code>views/ControllerID/ViewName.php</code>.</p>
+<p>Note that in the above code, the <code>message</code> parameter is <a href="yii-helpers-basehtml.html#encode()-detail">HTML-encoded</a>
+before being printed. This is necessary as the parameter comes from an end user, making it vulnerable to
+<a href="http://en.wikipedia.org/wiki/Cross-site_scripting">cross-site scripting (XSS) attacks</a> by embedding
+malicious JavaScript code in the parameter.</p>
+<p>Naturally, you may put more content in the <code>say</code> view. The content can consist of HTML tags, plain text, and even PHP statements.
+In fact, the <code>say</code> view is just a PHP script that is executed by the <a href="yii-base-controller.html#render()-detail">render()</a> method.
+The content printed by the view script will be returned to the application as the response's result. The application will in turn output this result to the end user.</p>
+<h2>Trying it Out  <span id="trying-it-out"></span><a href="#trying-it-out" class="hashlink">&para;</a></h2><p>After creating the action and the view, you may access the new page by accessing the following URL:</p>
+<pre><code class="hljs less"><span class="hljs-attribute">http</span>:<span class="hljs-comment">//hostname/index.php?r=site%2Fsay&amp;message=Hello+World</span>
+</code></pre>
+<p><img src="images/start-hello-world.png" alt="Hello World" /></p>
+<p>This URL will result in a page displaying "Hello World". The page shares the same header and footer as the other application pages. </p>
+<p>If you omit the <code>message</code> parameter in the URL, you would see the page display just "Hello". This is because <code>message</code> is passed as a parameter to the <code>actionSay()</code> method, and when it is omitted,
+the default value of <code>"Hello"</code> will be used instead.</p>
+<blockquote class="info"><p><strong>Info: </strong>The new page shares the same header and footer as other pages because the <a href="yii-base-controller.html#render()-detail">render()</a>
+  method will automatically embed the result of the <code>say</code> view in a so-called <a href="guide-structure-views.html#layouts">layout</a> which in this
+  case is located at <code>views/layouts/main.php</code>.</p>
+</blockquote>
+<p>The <code>r</code> parameter in the above URL requires more explanation. It stands for <a href="guide-runtime-routing.html">route</a>, an application wide unique ID
+that refers to an action. The route's format is <code>ControllerID/ActionID</code>. When the application receives
+a request, it will check this parameter, using the <code>ControllerID</code> part to determine which controller
+class should be instantiated to handle the request. Then, the controller will use the <code>ActionID</code> part
+to determine which action should be instantiated to do the real work. In this example case, the route <code>site/say</code>
+will be resolved to the <code>SiteController</code> controller class and the <code>say</code> action. As a result,
+the <code>SiteController::actionSay()</code> method will be called to handle the request.</p>
+<blockquote class="info"><p><strong>Info: </strong>Like actions, controllers also have IDs that uniquely identify them in an application.
+  Controller IDs use the same naming rules as action IDs. Controller class names are derived from
+  controller IDs by removing dashes from the IDs, capitalizing the first letter in each word,
+  and suffixing the resulting string with the word <code>Controller</code>. For example, the controller ID <code>post-comment</code> corresponds
+  to the controller class name <code>PostCommentController</code>.</p>
+</blockquote>
+<h2>Summary  <span id="summary"></span><a href="#summary" class="hashlink">&para;</a></h2><p>In this section, you have touched the controller and view parts of the MVC architectural pattern.
+You created an action as part of a controller to handle a specific request. And you also created a view
+to compose the response's content. In this simple example, no model was involved as the only data used was the <code>message</code> parameter.</p>
+<p>You have also learned about routes in Yii, which act as the bridge between user requests and controller actions.</p>
+<p>In the next section, you will learn how to create a model, and add a new page containing an HTML form.</p>

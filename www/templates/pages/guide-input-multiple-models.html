@@ -1,0 +1,75 @@
+
+        <h1>Getting Data for Multiple Models <span id="getting-data-for-multiple-models"></span><a href="#getting-data-for-multiple-models" class="hashlink">&para;</a></h1><p>When dealing with some complex data, it is possible that you may need to use multiple different models to collect
+the user input. For example, assuming the user login information is stored in the <code>user</code> table while the user profile
+information is stored in the <code>profile</code> table, you may want to collect the input data about a user through a <code>User</code> model 
+and a <code>Profile</code> model. With the Yii model and form support, you can solve this problem in a way that is not much
+different from handling a single model.</p>
+<p>In the following, we will show how you can create a form that would allow you to collect data for both <code>User</code> and <code>Profile</code>
+models.</p>
+<p>First, the controller action for collecting the user and profile data can be written as follows, </p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">controllers</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">Yii</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">Controller</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">NotFoundHttpException</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">User</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">Profile</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionUpdate</span><span class="hljs-params">(<span class="hljs-variable">$id</span>)</span>
+    </span>{
+        <span class="hljs-variable">$user</span> = User::findOne(<span class="hljs-variable">$id</span>);
+        <span class="hljs-keyword">if</span> (!<span class="hljs-variable">$user</span>) {
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NotFoundHttpException(<span class="hljs-string">"The user was not found."</span>);
+        }
+        
+        <span class="hljs-variable">$profile</span> = Profile::findOne(<span class="hljs-variable">$user</span>-&gt;profile_id);
+        
+        <span class="hljs-keyword">if</span> (!<span class="hljs-variable">$profile</span>) {
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NotFoundHttpException(<span class="hljs-string">"The user has no profile."</span>);
+        }
+        
+        <span class="hljs-variable">$user</span>-&gt;scenario = <span class="hljs-string">'update'</span>;
+        <span class="hljs-variable">$profile</span>-&gt;scenario = <span class="hljs-string">'update'</span>;
+        
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable">$user</span>-&gt;load(Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post()) &amp;&amp; <span class="hljs-variable">$profile</span>-&gt;load(Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post())) {
+            <span class="hljs-variable">$isValid</span> = <span class="hljs-variable">$user</span>-&gt;validate();
+            <span class="hljs-variable">$isValid</span> = <span class="hljs-variable">$profile</span>-&gt;validate() &amp;&amp; <span class="hljs-variable">$isValid</span>;
+            <span class="hljs-keyword">if</span> (<span class="hljs-variable">$isValid</span>) {
+                <span class="hljs-variable">$user</span>-&gt;save(<span class="hljs-keyword">false</span>);
+                <span class="hljs-variable">$profile</span>-&gt;save(<span class="hljs-keyword">false</span>);
+                <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;redirect([<span class="hljs-string">'user/view'</span>, <span class="hljs-string">'id'</span> =&gt; <span class="hljs-variable">$id</span>]);
+            }
+        }
+        
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;render(<span class="hljs-string">'update'</span>, [
+            <span class="hljs-string">'user'</span> =&gt; <span class="hljs-variable">$user</span>,
+            <span class="hljs-string">'profile'</span> =&gt; <span class="hljs-variable">$profile</span>,
+        ]);
+    }
+}
+</code></pre>
+<p>In the <code>update</code> action, we first load the <code>$user</code> and <code>$profile</code> models to be updated from the database. We then call 
+<a href="yii-base-model.html#load()-detail">yii\base\Model::load()</a> to populate these two models with the user input. If successful we will validate
+the two models and save them. Otherwise we will render the <code>update</code> view which has the following content:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">ActiveForm</span>;
+
+<span class="hljs-variable">$form</span> = ActiveForm::begin([
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'user-update-form'</span>,
+    <span class="hljs-string">'options'</span> =&gt; [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'form-horizontal'</span>],
+]) <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$user</span>, <span class="hljs-string">'username'</span>) <span class="hljs-preprocessor">?&gt;</span>
+
+    ...other input fields...
+    
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$profile</span>, <span class="hljs-string">'website'</span>) <span class="hljs-preprocessor">?&gt;</span>
+
+    <span class="hljs-preprocessor">&lt;?</span>= Html::submitButton(<span class="hljs-string">'Update'</span>, [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'btn btn-primary'</span>]) <span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-preprocessor">&lt;?php</span> ActiveForm::end() <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<p>As you can see, in the <code>update</code> view you would render input fields using two models <code>$user</code> and <code>$profile</code>.</p>
+        

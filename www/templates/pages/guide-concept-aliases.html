@@ -1,0 +1,90 @@
+<h1>Aliases <span id="aliases"></span><a href="#aliases" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#defining-aliases">Defining Aliases</a></li>
+<li><a href="#resolving-aliases">Resolving Aliases</a></li>
+<li><a href="#using-aliases">Using Aliases</a></li>
+<li><a href="#predefined-aliases">Predefined Aliases</a></li>
+<li><a href="#extension-aliases">Extension Aliases</a></li></ol></div>
+<p>Aliases are used to represent file paths or URLs so that you don't have to hard-code absolute paths or URLs in your
+project. An alias must start with the <code>@</code> character to be differentiated from normal file paths and URLs. Alias defined
+without leading <code>@</code> will be prefixed with <code>@</code> character.</p>
+<p>Yii has many pre-defined aliases already available. For example, the alias <code>@yii</code> represents the installation path of
+the Yii framework; <code>@web</code> represents the base URL for the currently running Web application.</p>
+<h2>Defining Aliases  <span id="defining-aliases"></span><a href="#defining-aliases" class="hashlink">&para;</a></h2><p>You can define an alias for a file path or URL by calling <a href="yii-baseyii.html#setAlias()-detail">Yii::setAlias()</a>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// an alias of a file path</span>
+Yii::setAlias(<span class="hljs-string">'@foo'</span>, <span class="hljs-string">'/path/to/foo'</span>);
+
+<span class="hljs-comment">// an alias of a URL</span>
+Yii::setAlias(<span class="hljs-string">'@bar'</span>, <span class="hljs-string">'http://www.example.com'</span>);
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>The file path or URL being aliased may <em>not</em> necessarily refer to an existing file or resource.</p>
+</blockquote>
+<p>Given a defined alias, you may derive a new alias (without the need of calling <a href="yii-baseyii.html#setAlias()-detail">Yii::setAlias()</a>) by appending
+a slash <code>/</code> followed with one or more path segments. The aliases defined via <a href="yii-baseyii.html#setAlias()-detail">Yii::setAlias()</a> becomes the 
+<em>root alias</em>, while aliases derived from it are <em>derived aliases</em>. For example, <code>@foo</code> is a root alias,
+while <code>@foo/bar/file.php</code> is a derived alias.</p>
+<p>You can define an alias using another alias (either root or derived):</p>
+<pre><code class="hljs php language-php">Yii::setAlias(<span class="hljs-string">'@foobar'</span>, <span class="hljs-string">'@foo/bar'</span>);
+</code></pre>
+<p>Root aliases are usually defined during the <a href="guide-runtime-bootstrapping.html">bootstrapping</a> stage.
+For example, you may call <a href="yii-baseyii.html#setAlias()-detail">Yii::setAlias()</a> in the <a href="guide-structure-entry-scripts.html">entry script</a>.
+For convenience, <a href="guide-structure-applications.html">Application</a> provides a writable property named <code>aliases</code>
+that you can configure in the application <a href="guide-concept-configurations.html">configuration</a>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-comment">// ...</span>
+    <span class="hljs-string">'aliases'</span> =&gt; [
+        <span class="hljs-string">'@foo'</span> =&gt; <span class="hljs-string">'/path/to/foo'</span>,
+        <span class="hljs-string">'@bar'</span> =&gt; <span class="hljs-string">'http://www.example.com'</span>,
+    ],
+];
+</code></pre>
+<h2>Resolving Aliases  <span id="resolving-aliases"></span><a href="#resolving-aliases" class="hashlink">&para;</a></h2><p>You can call <a href="yii-baseyii.html#getAlias()-detail">Yii::getAlias()</a> to resolve a root alias into the file path or URL it represents.
+The same method can also resolve a derived alias into the corresponding file path or URL:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">echo</span> Yii::getAlias(<span class="hljs-string">'@foo'</span>);               <span class="hljs-comment">// displays: /path/to/foo</span>
+<span class="hljs-keyword">echo</span> Yii::getAlias(<span class="hljs-string">'@bar'</span>);               <span class="hljs-comment">// displays: http://www.example.com</span>
+<span class="hljs-keyword">echo</span> Yii::getAlias(<span class="hljs-string">'@foo/bar/file.php'</span>);  <span class="hljs-comment">// displays: /path/to/foo/bar/file.php</span>
+</code></pre>
+<p>The path/URL represented by a derived alias is determined by replacing the root alias part with its corresponding
+path/URL in the derived alias.</p>
+<blockquote class="note"><p><strong>Note: </strong>The <a href="yii-baseyii.html#getAlias()-detail">Yii::getAlias()</a> method does not check whether the resulting path/URL refers to an existing file or resource.</p>
+</blockquote>
+<p>A root alias may also contain slash <code>/</code> characters. The <a href="yii-baseyii.html#getAlias()-detail">Yii::getAlias()</a> method
+is intelligent enough to tell which part of an alias is a root alias and thus correctly determines
+the corresponding file path or URL:</p>
+<pre><code class="hljs php language-php">Yii::setAlias(<span class="hljs-string">'@foo'</span>, <span class="hljs-string">'/path/to/foo'</span>);
+Yii::setAlias(<span class="hljs-string">'@foo/bar'</span>, <span class="hljs-string">'/path2/bar'</span>);
+Yii::getAlias(<span class="hljs-string">'@foo/test/file.php'</span>);  <span class="hljs-comment">// displays: /path/to/foo/test/file.php</span>
+Yii::getAlias(<span class="hljs-string">'@foo/bar/file.php'</span>);   <span class="hljs-comment">// displays: /path2/bar/file.php</span>
+</code></pre>
+<p>If <code>@foo/bar</code> is not defined as a root alias, the last statement would display <code>/path/to/foo/bar/file.php</code>.</p>
+<h2>Using Aliases  <span id="using-aliases"></span><a href="#using-aliases" class="hashlink">&para;</a></h2><p>Aliases are recognized in many places in Yii without needing to call <a href="yii-baseyii.html#getAlias()-detail">Yii::getAlias()</a> to convert
+them into paths or URLs. For example, <a href="yii-caching-filecache.html#$cachePath-detail">yii\caching\FileCache::$cachePath</a> can accept both a file path
+and an alias representing a file path, thanks to the <code>@</code> prefix which allows it to differentiate a file path
+from an alias.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">caching</span>\<span class="hljs-title">FileCache</span>;
+
+<span class="hljs-variable">$cache</span> = <span class="hljs-keyword">new</span> FileCache([
+    <span class="hljs-string">'cachePath'</span> =&gt; <span class="hljs-string">'@runtime/cache'</span>,
+]);
+</code></pre>
+<p>Please pay attention to the API documentation to see if a property or method parameter supports aliases.</p>
+<h2>Predefined Aliases  <span id="predefined-aliases"></span><a href="#predefined-aliases" class="hashlink">&para;</a></h2><p>Yii predefines a set of aliases to easily reference commonly used file paths and URLs:</p>
+<ul>
+<li><code>@yii</code>, the directory where the <code>BaseYii.php</code> file is located (also called the framework directory).</li>
+<li><code>@app</code>, the <a href="yii-base-module.html#$basePath-detail">base path</a> of the currently running application.</li>
+<li><code>@runtime</code>, the <a href="yii-base-application.html#$runtimePath-detail">runtime path</a> of the currently running application. Defaults to <code>@app/runtime</code>.</li>
+<li><code>@webroot</code>, the Web root directory of the currently running Web application. It is determined based on the directory
+containing the <a href="guide-structure-entry-scripts.html">entry script</a>.</li>
+<li><code>@web</code>, the base URL of the currently running Web application. It has the same value as <a href="yii-web-request.html#$baseUrl-detail">yii\web\Request::$baseUrl</a>.</li>
+<li><code>@vendor</code>, the <a href="yii-base-application.html#$vendorPath-detail">Composer vendor directory</a>. Defaults to <code>@app/vendor</code>.</li>
+<li><code>@bower</code>, the root directory that contains <a href="http://bower.io/">bower packages</a>. Defaults to <code>@vendor/bower</code>.</li>
+<li><code>@npm</code>, the root directory that contains <a href="https://www.npmjs.org/">npm packages</a>. Defaults to <code>@vendor/npm</code>.</li>
+</ul>
+<p>The <code>@yii</code> alias is defined when you include the <code>Yii.php</code> file in your <a href="guide-structure-entry-scripts.html">entry script</a>.
+The rest of the aliases are defined in the application constructor when applying the application
+<a href="guide-concept-configurations.html">configuration</a>.</p>
+<h2>Extension Aliases  <span id="extension-aliases"></span><a href="#extension-aliases" class="hashlink">&para;</a></h2><p>An alias is automatically defined for each <a href="guide-structure-extensions.html">extension</a> that is installed via Composer.
+Each alias is named after the root namespace of the extension as declared in its <code>composer.json</code> file, and each alias
+represents the root directory of the package. For example, if you install the <code>yiisoft/yii2-jui</code> extension,
+you will automatically have the alias <code>@yii/jui</code> defined during the <a href="guide-runtime-bootstrapping.html">bootstrapping</a> stage, equivalent to:</p>
+<pre><code class="hljs php language-php">Yii::setAlias(<span class="hljs-string">'@yii/jui'</span>, <span class="hljs-string">'VendorPath/yiisoft/yii2-jui'</span>);
+</code></pre>

@@ -1,0 +1,44 @@
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-jui-extension-for-yii-2" class="anchor" href="#jui-extension-for-yii-2" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>JUI Extension for Yii 2</h1>
+
+<p>This is the jQuery UI extension for Yii 2. It encapsulates <a href="http://jqueryui.com/">jQuery UI widgets</a> as Yii widgets,
+and makes using jQuery UI widgets in Yii applications extremely easy.</p>
+
+
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h1>
+
+<h2><a id="user-content-getting-composer-package" class="anchor" href="#getting-composer-package" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Getting Composer package</h2>
+
+<p>The preferred way to install this extension is through <a href="http://getcomposer.org/download/">composer</a>.</p>
+
+<p>Either run</p>
+
+<pre><code>php composer.phar require --prefer-dist yiisoft/yii2-jui
+</code></pre>
+
+<p>or add</p>
+
+<pre><code>"yiisoft/yii2-jui": "~2.0.0"
+</code></pre>
+
+<p>to the require section of your <code>composer.json</code> file.</p>
+</article>
+
+
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-basic-usage" class="anchor" href="#basic-usage" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Basic Usage</h1>
+
+<p>The following
+single line of code in a view file would render a <a href="http://api.jqueryui.com/datepicker/">jQuery UI DatePicker</a> widget:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-k">=</span> <span class="pl-c1">yii\jui\</span><span class="pl-c1">DatePicker</span><span class="pl-k">::</span>widget([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>attributeName<span class="pl-pds">'</span></span>]) </span><span class="pl-pse"><span class="pl-s1">?</span>&gt;</span></pre></div>
+
+<p>Configuring the jQuery UI options should be done using the clientOptions attribute:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-k">=</span> <span class="pl-c1">yii\jui\</span><span class="pl-c1">DatePicker</span><span class="pl-k">::</span>widget([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>attributeName<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>clientOptions<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>defaultDate<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>2014-01-01<span class="pl-pds">'</span></span>]]) </span><span class="pl-pse"><span class="pl-s1">?</span>&gt;</span></pre></div>
+
+<p>If you want to use the JUI widget in an ActiveForm, it can be done like this:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-k">=</span> <span class="pl-smi">$form</span><span class="pl-k">-&gt;</span>field(<span class="pl-smi">$model</span>, <span class="pl-s"><span class="pl-pds">'</span>attributeName<span class="pl-pds">'</span></span>)<span class="pl-k">-&gt;</span>widget(<span class="pl-c1">DatePicker</span><span class="pl-k">::</span>className(), [<span class="pl-s"><span class="pl-pds">'</span>clientOptions<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [<span class="pl-s"><span class="pl-pds">'</span>defaultDate<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>2014-01-01<span class="pl-pds">'</span></span>]]) </span><span class="pl-pse"><span class="pl-s1">?</span>&gt;</span></pre></div>
+</article>
+
+
+<a href="https://github.com/yiisoft/yii2-jui/blob/master/docs/guide/README.md">For more information</a>

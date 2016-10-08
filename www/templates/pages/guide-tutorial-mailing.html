@@ -1,0 +1,165 @@
+
+        <h1>Mailing <span id="mailing"></span><a href="#mailing" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#configuration">Configuration</a></li>
+<li><a href="#basic-usage">Basic usage</a></li>
+<li><a href="#composing-mail-content">Composing mail content</a></li>
+<li><a href="#file-attachment">File attachment</a></li>
+<li><a href="#embedding-images">Embedding images</a></li>
+<li><a href="#testing-and-debugging">Testing and debugging</a></li>
+<li><a href="#creating-your-own-mail-solution">Creating your own mail solution</a></li></ol></div>
+<blockquote class="note"><p><strong>Note: </strong>This section is under development.</p>
+</blockquote>
+<p>Yii supports composition and sending of the email messages. However, the framework core provides
+only the content composition functionality and basic interface. Actual mail sending mechanism should
+be provided by the extension, because different projects may require its different implementation and
+it usually depends on the external services and libraries.</p>
+<p>For the most common cases you can use <a href="https://github.com/yiisoft/yii2-swiftmailer">yii2-swiftmailer</a> official extension.</p>
+<h2>Configuration <span id="configuration"></span><a href="#configuration" class="hashlink">&para;</a></h2><p>Mail component configuration depends on the extension you have chosen.
+In general your application configuration should look like:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-comment">//....</span>
+    <span class="hljs-string">'components'</span> =&gt; [
+        <span class="hljs-string">'mailer'</span> =&gt; [
+            <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\swiftmailer\Mailer'</span>,
+        ],
+    ],
+];
+</code></pre>
+<h2>Basic usage <span id="basic-usage"></span><a href="#basic-usage" class="hashlink">&para;</a></h2><p>Once the <code>mailer</code> component is configured, you can use the following code to send an email message:</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose()
+    -&gt;setFrom(<span class="hljs-string">'from@domain.com'</span>)
+    -&gt;setTo(<span class="hljs-string">'to@domain.com'</span>)
+    -&gt;setSubject(<span class="hljs-string">'Message subject'</span>)
+    -&gt;setTextBody(<span class="hljs-string">'Plain text content'</span>)
+    -&gt;setHtmlBody(<span class="hljs-string">'&lt;b&gt;HTML content&lt;/b&gt;'</span>)
+    -&gt;send();
+</code></pre>
+<p>In the above example the method <code>compose()</code> creates an instance of the mail message, which then is populated and sent.
+You may put more complex logic in this process if needed:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$message</span> = Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose();
+<span class="hljs-keyword">if</span> (Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;isGuest) {
+    <span class="hljs-variable">$message</span>-&gt;setFrom(<span class="hljs-string">'from@domain.com'</span>);
+} <span class="hljs-keyword">else</span> {
+    <span class="hljs-variable">$message</span>-&gt;setFrom(Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;identity-&gt;email);
+}
+<span class="hljs-variable">$message</span>-&gt;setTo(Yii::<span class="hljs-variable">$app</span>-&gt;params[<span class="hljs-string">'adminEmail'</span>])
+    -&gt;setSubject(<span class="hljs-string">'Message subject'</span>)
+    -&gt;setTextBody(<span class="hljs-string">'Plain text content'</span>)
+    -&gt;send();
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>each <code>mailer</code> extension comes in 2 major classes: <code>Mailer</code> and <code>Message</code>. <code>Mailer</code> always knows
+  the class name and specific of the <code>Message</code>. Do not attempt to instantiate <code>Message</code> object directly —
+  always use <code>compose()</code> method for it.</p>
+</blockquote>
+<p>You may also send several messages at once:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$messages</span> = [];
+<span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$users</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$user</span>) {
+    <span class="hljs-variable">$messages</span>[] = Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose()
+        <span class="hljs-comment">// ...</span>
+        -&gt;setTo(<span class="hljs-variable">$user</span>-&gt;email);
+}
+Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;sendMultiple(<span class="hljs-variable">$messages</span>);
+</code></pre>
+<p>Some particular mail extensions may benefit from this approach, using single network message etc.</p>
+<h2>Composing mail content <span id="composing-mail-content"></span><a href="#composing-mail-content" class="hashlink">&para;</a></h2><p>Yii allows composition of the actual mail messages content via special view files.
+By default these files should be located at <code>@app/mail</code> path.</p>
+<p>Example mail view file content:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Url</span>;
+
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $this \yii\web\View view component instance */</span>
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $message \yii\mail\BaseMessage instance of newly created mail message */</span>
+
+<span class="hljs-preprocessor">?&gt;</span>
+&lt;h2&gt;This message allows you to visit our site home page by one click&lt;/h2&gt;
+<span class="hljs-preprocessor">&lt;?</span>= Html::a(<span class="hljs-string">'Go to home page'</span>, Url::home(<span class="hljs-string">'http'</span>)) <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<p>In order to compose message content via view file simply pass view name to the <code>compose()</code> method:</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose(<span class="hljs-string">'home-link'</span>) <span class="hljs-comment">// a view rendering result becomes the message body here</span>
+    -&gt;setFrom(<span class="hljs-string">'from@domain.com'</span>)
+    -&gt;setTo(<span class="hljs-string">'to@domain.com'</span>)
+    -&gt;setSubject(<span class="hljs-string">'Message subject'</span>)
+    -&gt;send();
+</code></pre>
+<p>You may pass additional view parameters to <code>compose()</code> method, which will be available inside the view files:</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose(<span class="hljs-string">'greetings'</span>, [
+    <span class="hljs-string">'user'</span> =&gt; Yii::<span class="hljs-variable">$app</span>-&gt;user-&gt;identity,
+    <span class="hljs-string">'advertisement'</span> =&gt; <span class="hljs-variable">$adContent</span>,
+]);
+</code></pre>
+<p>You can specify different view files for HTML and plain text message contents:</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose([
+    <span class="hljs-string">'html'</span> =&gt; <span class="hljs-string">'contact-html'</span>,
+    <span class="hljs-string">'text'</span> =&gt; <span class="hljs-string">'contact-text'</span>,
+]);
+</code></pre>
+<p>If you specify view name as a scalar string, its rendering result will be used as HTML body, while
+plain text body will be composed by removing all HTML entities from HTML one.</p>
+<p>View rendering result can be wrapped into the layout, which can be setup using <a href="yii-mail-basemailer.html#$htmlLayout-detail">yii\mail\BaseMailer::$htmlLayout</a>
+and <a href="yii-mail-basemailer.html#$textLayout-detail">yii\mail\BaseMailer::$textLayout</a>. It will work the same way like layouts in regular web application.
+Layout can be used to setup mail CSS styles or other shared content:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $this \yii\web\View view component instance */</span>
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $message \yii\mail\MessageInterface the message being composed */</span>
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $content string main view render result */</span>
+<span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-preprocessor">&lt;?php</span> <span class="hljs-variable">$this</span>-&gt;beginPage() <span class="hljs-preprocessor">?&gt;</span>
+&lt;!DOCTYPE html <span class="hljs-keyword">PUBLIC</span> <span class="hljs-string">"-//W3C//DTD XHTML 1.0 Strict//EN"</span> <span class="hljs-string">"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"</span>&gt;
+&lt;html xmlns=<span class="hljs-string">"http://www.w3.org/1999/xhtml"</span>&gt;
+&lt;head&gt;
+    &lt;meta http-equiv=<span class="hljs-string">"Content-Type"</span> content=<span class="hljs-string">"text/html; charset=&lt;?= Yii::$app-&gt;charset ?&gt;"</span> /&gt;
+    &lt;style type=<span class="hljs-string">"text/css"</span>&gt;
+        .heading {...}
+        .<span class="hljs-keyword">list</span> {...}
+        .footer {...}
+    &lt;/style&gt;
+    <span class="hljs-preprocessor">&lt;?php</span> <span class="hljs-variable">$this</span>-&gt;head() <span class="hljs-preprocessor">?&gt;</span>
+&lt;/head&gt;
+&lt;body&gt;
+    <span class="hljs-preprocessor">&lt;?php</span> <span class="hljs-variable">$this</span>-&gt;beginBody() <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$content</span> <span class="hljs-preprocessor">?&gt;</span>
+    &lt;div <span class="hljs-class"><span class="hljs-keyword">class</span>="<span class="hljs-title">footer</span>"&gt;<span class="hljs-title">With</span> <span class="hljs-title">kind</span> <span class="hljs-title">regards</span>, &lt;?= <span class="hljs-title">Yii</span>::$<span class="hljs-title">app</span>-&gt;<span class="hljs-title">name</span> ?&gt; <span class="hljs-title">team</span>&lt;/<span class="hljs-title">div</span>&gt;
+    &lt;?<span class="hljs-title">php</span> $<span class="hljs-title">this</span>-&gt;<span class="hljs-title">endBody</span>() ?&gt;
+&lt;/<span class="hljs-title">body</span>&gt;
+&lt;/<span class="hljs-title">html</span>&gt;
+&lt;?<span class="hljs-title">php</span> $<span class="hljs-title">this</span>-&gt;<span class="hljs-title">endPage</span>() ?&gt;
+</span></code></pre>
+<h2>File attachment <span id="file-attachment"></span><a href="#file-attachment" class="hashlink">&para;</a></h2><p>You can add attachments to message using methods <code>attach()</code> and <code>attachContent()</code>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$message</span> = Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose();
+
+<span class="hljs-comment">// attach file from local file system</span>
+<span class="hljs-variable">$message</span>-&gt;attach(<span class="hljs-string">'/path/to/source/file.pdf'</span>);
+
+<span class="hljs-comment">// create attachment on-the-fly</span>
+<span class="hljs-variable">$message</span>-&gt;attachContent(<span class="hljs-string">'Attachment content'</span>, [<span class="hljs-string">'fileName'</span> =&gt; <span class="hljs-string">'attach.txt'</span>, <span class="hljs-string">'contentType'</span> =&gt; <span class="hljs-string">'text/plain'</span>]);
+</code></pre>
+<h2>Embedding images <span id="embedding-images"></span><a href="#embedding-images" class="hashlink">&para;</a></h2><p>You can embed images into the message content using <code>embed()</code> method. This method returns the attachment id,
+which should be then used at <code>img</code> tag.
+This method is easy to use when composing message content via view file:</p>
+<pre><code class="hljs php language-php">Yii::<span class="hljs-variable">$app</span>-&gt;mailer-&gt;compose(<span class="hljs-string">'embed-email'</span>, [<span class="hljs-string">'imageFileName'</span> =&gt; <span class="hljs-string">'/path/to/image.jpg'</span>])
+    <span class="hljs-comment">// ...</span>
+    -&gt;send();
+</code></pre>
+<p>Then inside the view file you can use the following code:</p>
+<pre><code class="hljs php language-php">&lt;img src=<span class="hljs-string">"&lt;?= $message-&gt;embed($imageFileName); ?&gt;"</span>&gt;
+</code></pre>
+<h2>Testing and debugging <span id="testing-and-debugging"></span><a href="#testing-and-debugging" class="hashlink">&para;</a></h2><p>A developer often has to check, what actual emails are sent by the application, what was their content and so on.
+Such ability is granted by Yii via <code>yii\mail\BaseMailer::useFileTransport</code>. If enabled, this option enforces
+saving mail message data into the local files instead of regular sending. These files will be saved under
+<code>yii\mail\BaseMailer::fileTransportPath</code>, which is <code>@runtime/mail</code> by default.</p>
+<blockquote class="note"><p><strong>Note: </strong>you can either save the messages to the files or send them to the actual recipients, but can not do both simultaneously.</p>
+</blockquote>
+<p>A mail message file can be opened by a regular text file editor, so you can browse the actual message headers, content and so on.
+This mechanism may prove itself, while debugging application or running unit test.</p>
+<blockquote class="note"><p><strong>Note: </strong>the mail message file content is composed via <code>\yii\mail\MessageInterface::toString()</code>, so it depends on the actual
+  mail extension you are using in your application.</p>
+</blockquote>
+<h2>Creating your own mail solution <span id="creating-your-own-mail-solution"></span><a href="#creating-your-own-mail-solution" class="hashlink">&para;</a></h2><p>In order to create your own custom mail solution, you need to create 2 classes: one for the <code>Mailer</code> and
+another one for the <code>Message</code>.
+You can use <code>yii\mail\BaseMailer</code> and <code>yii\mail\BaseMessage</code> as the base classes for your solution. These classes
+already contain the basic logic, which is described in this guide. However, their usage is not mandatory, it is enough
+to implement <code>yii\mail\MailerInterface</code> and <code>yii\mail\MessageInterface</code> interfaces.
+Then you need to implement all the abstract methods to build your solution.</p>

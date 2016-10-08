@@ -1,0 +1,90 @@
+
+        <h1>Collecting tabular input <span id="collecting-tabular-input"></span><a href="#collecting-tabular-input" class="hashlink">&para;</a></h1><p>Sometimes you need to handle multiple models of the same kind in a single form. For example, multiple settings, where
+each setting is stored as a name-value pair and is represented by a <code>Setting</code> <a href="guide-db-active-record.html">active record</a> model.
+This kind of form is also often referred to as "tabular input".
+In contrast to this, handling different models of different kind, is handled in the section
+<a href="guide-input-multiple-models.html">Complex Forms with Multiple Models</a>.</p>
+<p>The following shows how to implement tabular input with Yii.</p>
+<p>There are three different situations to cover, which have to be handled slightly different:</p>
+<ul>
+<li>Updating a fixed set of records from the database</li>
+<li>Creating a dynamic set of new records</li>
+<li>Updating, creating and deleting of records on one page</li>
+</ul>
+<p>In contrast to the single model forms explained before, we are working with an array of models now.
+This array is passed to the view to display the input fields for each model in a table like style and we
+will use helper methods of <a href="yii-base-model.html">yii\base\Model</a> that allow loading and validating multiple models at once:</p>
+<ul>
+<li><a href="yii-base-model.html#loadMultiple()-detail">Model::loadMultiple()</a> load post data into an array of models.</li>
+<li><a href="yii-base-model.html#validateMultiple()-detail">Model::validateMultiple()</a> validates an array of models.</li>
+</ul>
+<h3>Updating a fixed set of records <span id="updating-a-fixed-set-of-records"></span><a href="#updating-a-fixed-set-of-records" class="hashlink">&para;</a></h3><p>Let's start with the controller action:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">controllers</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">Yii</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">web</span>\<span class="hljs-title">Controller</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">Setting</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SettingsController</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Controller</span>
+</span>{
+    <span class="hljs-comment">// ...</span>
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionUpdate</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-variable">$settings</span> = Setting::find()-&gt;indexBy(<span class="hljs-string">'id'</span>)-&gt;all();
+
+        <span class="hljs-keyword">if</span> (Model::loadMultiple(<span class="hljs-variable">$settings</span>, Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post()) &amp;&amp; Model::validateMultiple(<span class="hljs-variable">$settings</span>)) {
+            <span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$settings</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$setting</span>) {
+                <span class="hljs-variable">$setting</span>-&gt;save(<span class="hljs-keyword">false</span>);
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;redirect(<span class="hljs-string">'index'</span>);
+        }
+
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$this</span>-&gt;render(<span class="hljs-string">'update'</span>, [<span class="hljs-string">'settings'</span> =&gt; <span class="hljs-variable">$settings</span>]);
+    }
+}
+</code></pre>
+<p>In the code above we're using <a href="yii-db-querytrait.html#indexBy()-detail">indexBy()</a> when retrieving models from the database to populate an array indexed by models primary keys.
+These will be later used to identify form fields. <a href="yii-base-model.html#loadMultiple()-detail">Model::loadMultiple()</a> fills multiple
+models with the form data coming from POST
+and <a href="yii-base-model.html#validateMultiple()-detail">Model::validateMultiple()</a> validates all models at once.
+As we have validated our models before, using <code>validateMultiple()</code>, we're now passing <code>false</code> as
+a parameter to <a href="yii-db-baseactiverecord.html#save()-detail">save()</a> to not run validation twice.</p>
+<p>Now the form that's in <code>update</code> view:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">ActiveForm</span>;
+
+<span class="hljs-variable">$form</span> = ActiveForm::begin();
+
+<span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$settings</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$index</span> =&gt; <span class="hljs-variable">$setting</span>) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$setting</span>, <span class="hljs-string">"[$index]value"</span>)-&gt;label(<span class="hljs-variable">$setting</span>-&gt;name);
+}
+
+ActiveForm::end();
+</code></pre>
+<p>Here for each setting we are rendering name and an input with a value. It is important to add a proper index
+to input name since that is how <a href="yii-base-model.html#loadMultiple()-detail">Model::loadMultiple()</a> determines which model to fill with which values.</p>
+<h3>Creating a dynamic set of new records <span id="creating-a-dynamic-set-of-new-records"></span><a href="#creating-a-dynamic-set-of-new-records" class="hashlink">&para;</a></h3><p>Creating new records is similar to updating, except the part, where we instantiate the models:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionCreate</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-variable">$count</span> = count(Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post(<span class="hljs-string">'Setting'</span>, []));
+    <span class="hljs-variable">$settings</span> = [<span class="hljs-keyword">new</span> Setting()];
+    <span class="hljs-keyword">for</span>(<span class="hljs-variable">$i</span> = <span class="hljs-number">1</span>; <span class="hljs-variable">$i</span> &lt; <span class="hljs-variable">$count</span>; <span class="hljs-variable">$i</span>++) {
+        <span class="hljs-variable">$settings</span>[] = <span class="hljs-keyword">new</span> Setting();
+    }
+
+    <span class="hljs-comment">// ...</span>
+}
+</code></pre>
+<p>Here we create an initial <code>$settings</code> array containing one model by default so that always at least one text field will be
+visible in the view. Additionally we add more models for each line of input we may have received.</p>
+<p>In the view you can use javascript to add new input lines dynamically.</p>
+<h3>Combining Update, Create and Delete on one page <span id="combining-update-create-and-delete-on-one-page"></span><a href="#combining-update-create-and-delete-on-one-page" class="hashlink">&para;</a></h3><blockquote class="note"><p><strong>Note: </strong>This section is under development.</p>
+<p>It has no content yet.</p>
+</blockquote>
+<p>TBD</p>
+        

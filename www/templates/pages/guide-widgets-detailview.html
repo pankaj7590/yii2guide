@@ -1,0 +1,20 @@
+<p><strong>DetailView displays the detail of a single data <a href="yii-widgets-detailview.html#$model-detail">$model</a>.</strong></p>
+    <p>DetailView is best used for displaying a model in a regular format (e.g. each model attribute
+is displayed as a row in a table.) The model can be either an instance of <a href="yii-base-model.html">yii\base\Model</a>
+or an associative array.</p>
+<p>DetailView uses the <a href="yii-widgets-detailview.html#$attributes-detail">$attributes</a> property to determines which model attributes
+should be displayed and how they should be formatted.</p>
+<p>A typical usage of DetailView is as follows:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">echo</span> DetailView::widget([
+    <span class="hljs-string">'model'</span> =&gt; <span class="hljs-variable">$model</span>,
+    <span class="hljs-string">'attributes'</span> =&gt; [
+        <span class="hljs-string">'title'</span>,               <span class="hljs-comment">// title attribute (in plain text)</span>
+        <span class="hljs-string">'description:html'</span>,    <span class="hljs-comment">// description attribute in HTML</span>
+        [                      <span class="hljs-comment">// the owner name of the model</span>
+            <span class="hljs-string">'label'</span> =&gt; <span class="hljs-string">'Owner'</span>,
+            <span class="hljs-string">'value'</span> =&gt; <span class="hljs-variable">$model</span>-&gt;owner-&gt;name,
+        ],
+        <span class="hljs-string">'created_at:datetime'</span>, <span class="hljs-comment">// creation date formatted as datetime</span>
+    ],
+]);
+</code></pre>

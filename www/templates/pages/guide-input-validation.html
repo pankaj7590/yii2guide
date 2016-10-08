@@ -1,0 +1,567 @@
+
+        <h1>Validating Input <span id="validating-input"></span><a href="#validating-input" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#declaring-rules">Declaring Rules</a></li>
+<li><a href="#ad-hoc-validation">Ad Hoc Validation</a></li>
+<li><a href="#creating-validators">Creating Validators</a></li>
+<li><a href="#client-side-validation">Client-Side Validation</a></li></ol></div>
+<p>As a rule of thumb, you should never trust the data received from end users and should always validate it
+before putting it to good use.</p>
+<p>Given a <a href="guide-structure-models.html">model</a> populated with user inputs, you can validate the inputs by calling the
+<a href="yii-base-model.html#validate()-detail">yii\base\Model::validate()</a> method. The method will return a boolean value indicating whether the validation
+succeeded or not. If not, you may get the error messages from the <a href="yii-base-model.html#$errors-detail">yii\base\Model::$errors</a> property. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$model</span> = <span class="hljs-keyword">new</span> \app\models\ContactForm();
+
+<span class="hljs-comment">// populate model attributes with user inputs</span>
+<span class="hljs-variable">$model</span>-&gt;load(\Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post());
+<span class="hljs-comment">// which is equivalent to the following:</span>
+<span class="hljs-comment">// $model-&gt;attributes = \Yii::$app-&gt;request-&gt;post('ContactForm');</span>
+
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$model</span>-&gt;validate()) {
+    <span class="hljs-comment">// all inputs are valid</span>
+} <span class="hljs-keyword">else</span> {
+    <span class="hljs-comment">// validation failed: $errors is an array containing error messages</span>
+    <span class="hljs-variable">$errors</span> = <span class="hljs-variable">$model</span>-&gt;errors;
+}
+</code></pre>
+<h2>Declaring Rules  <span id="declaring-rules"></span><a href="#declaring-rules" class="hashlink">&para;</a></h2><p>To make <code>validate()</code> really work, you should declare validation rules for the attributes you plan to validate.
+This should be done by overriding the <a href="yii-base-model.html#rules()-detail">yii\base\Model::rules()</a> method. The following example shows how
+the validation rules for the <code>ContactForm</code> model are declared:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">return</span> [
+        <span class="hljs-comment">// the name, email, subject and body attributes are required</span>
+        [[<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>, <span class="hljs-string">'subject'</span>, <span class="hljs-string">'body'</span>], <span class="hljs-string">'required'</span>],
+
+        <span class="hljs-comment">// the email attribute should be a valid email address</span>
+        [<span class="hljs-string">'email'</span>, <span class="hljs-string">'email'</span>],
+    ];
+}
+</code></pre>
+<p>The <a href="yii-base-model.html#rules()-detail">rules()</a> method should return an array of rules, each of which is an array
+of the following format:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-comment">// required, specifies which attributes should be validated by this rule.</span>
+    <span class="hljs-comment">// For a single attribute, you can use the attribute name directly</span>
+    <span class="hljs-comment">// without having it in an array</span>
+    [<span class="hljs-string">'attribute1'</span>, <span class="hljs-string">'attribute2'</span>, ...],
+
+    <span class="hljs-comment">// required, specifies the type of this rule.</span>
+    <span class="hljs-comment">// It can be a class name, validator alias, or a validation method name</span>
+    <span class="hljs-string">'validator'</span>,
+
+    <span class="hljs-comment">// optional, specifies in which scenario(s) this rule should be applied</span>
+    <span class="hljs-comment">// if not given, it means the rule applies to all scenarios</span>
+    <span class="hljs-comment">// You may also configure the "except" option if you want to apply the rule</span>
+    <span class="hljs-comment">// to all scenarios except the listed ones</span>
+    <span class="hljs-string">'on'</span> =&gt; [<span class="hljs-string">'scenario1'</span>, <span class="hljs-string">'scenario2'</span>, ...],
+
+    <span class="hljs-comment">// optional, specifies additional configurations for the validator object</span>
+    <span class="hljs-string">'property1'</span> =&gt; <span class="hljs-string">'value1'</span>, <span class="hljs-string">'property2'</span> =&gt; <span class="hljs-string">'value2'</span>, ...
+]
+</code></pre>
+<p>For each rule you must specify at least which attributes the rule applies to and what is the type of the rule.
+You can specify the rule type in one of the following forms:</p>
+<ul>
+<li>the alias of a core validator, such as <code>required</code>, <code>in</code>, <code>date</code>, etc. Please refer to
+the <a href="guide-tutorial-core-validators.html">Core Validators</a> for the complete list of core validators.</li>
+<li>the name of a validation method in the model class, or an anonymous function. Please refer to the
+<a href="#inline-validators">Inline Validators</a> subsection for more details.</li>
+<li>a fully qualified validator class name. Please refer to the <a href="#standalone-validators">Standalone Validators</a>
+subsection for more details.</li>
+</ul>
+<p>A rule can be used to validate one or multiple attributes, and an attribute may be validated by one or multiple rules.
+A rule may be applied in certain <a href="guide-structure-models.html#scenarios">scenarios</a> only by specifying the <code>on</code> option.
+If you do not specify an <code>on</code> option, it means the rule will be applied to all scenarios.</p>
+<p>When the <code>validate()</code> method is called, it does the following steps to perform validation:</p>
+<ol>
+<li>Determine which attributes should be validated by getting the attribute list from <a href="yii-base-model.html#scenarios()-detail">yii\base\Model::scenarios()</a>
+using the current <a href="yii-base-model.html#$scenario-detail">scenario</a>. These attributes are called <em>active attributes</em>.</li>
+<li>Determine which validation rules should be used by getting the rule list from <a href="yii-base-model.html#rules()-detail">yii\base\Model::rules()</a>
+using the current <a href="yii-base-model.html#$scenario-detail">scenario</a>. These rules are called <em>active rules</em>.</li>
+<li>Use each active rule to validate each active attribute which is associated with the rule.
+The validation rules are evaluated in the order they are listed.</li>
+</ol>
+<p>According to the above validation steps, an attribute will be validated if and only if it is
+an active attribute declared in <code>scenarios()</code> and is associated with one or multiple active rules
+declared in <code>rules()</code>.</p>
+<blockquote class="note"><p><strong>Note: </strong>It is handy to give names to rules i.e.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">return</span> [
+        <span class="hljs-comment">// ...</span>
+        <span class="hljs-string">'password'</span> =&gt; [[<span class="hljs-string">'password'</span>], <span class="hljs-string">'string'</span>, <span class="hljs-string">'max'</span> =&gt; <span class="hljs-number">60</span>],
+    ];
+}
+</code></pre>
+<p>You can use it in a child model:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-variable">$rules</span> = <span class="hljs-keyword">parent</span>::rules();
+    <span class="hljs-keyword">unset</span>(<span class="hljs-variable">$rules</span>[<span class="hljs-string">'password'</span>]);
+    <span class="hljs-keyword">return</span> <span class="hljs-variable">$rules</span>;
+}
+</code></pre>
+</blockquote>
+<h3>Customizing Error Messages  <span id="customizing-error-messages"></span><a href="#customizing-error-messages" class="hashlink">&para;</a></h3><p>Most validators have default error messages that will be added to the model being validated when its attributes
+fail the validation. For example, the <a href="yii-validators-requiredvalidator.html">required</a> validator will add
+a message "Username cannot be blank." to a model when the <code>username</code> attribute fails the rule using this validator.</p>
+<p>You can customize the error message of a rule by specifying the <code>message</code> property when declaring the rule,
+like the following,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">return</span> [
+        [<span class="hljs-string">'username'</span>, <span class="hljs-string">'required'</span>, <span class="hljs-string">'message'</span> =&gt; <span class="hljs-string">'Please choose a username.'</span>],
+    ];
+}
+</code></pre>
+<p>Some validators may support additional error messages to more precisely describe different causes of
+validation failures. For example, the <a href="yii-validators-numbervalidator.html">number</a> validator supports
+<a href="yii-validators-numbervalidator.html#$tooBig-detail">tooBig</a> and <a href="yii-validators-numbervalidator.html#$tooSmall-detail">tooSmall</a>
+to describe the validation failure when the value being validated is too big and too small, respectively.
+You may configure these error messages like configuring other properties of validators in a validation rule.</p>
+<h3>Validation Events  <span id="validation-events"></span><a href="#validation-events" class="hashlink">&para;</a></h3><p>When <a href="yii-base-model.html#validate()-detail">yii\base\Model::validate()</a> is called, it will call two methods that you may override to customize
+the validation process:</p>
+<ul>
+<li><a href="yii-base-model.html#beforeValidate()-detail">yii\base\Model::beforeValidate()</a>: the default implementation will trigger a <a href="yii-base-model.html#EVENT_BEFORE_VALIDATE-detail">yii\base\Model::EVENT_BEFORE_VALIDATE</a>
+event. You may either override this method or respond to this event to do some preprocessing work
+(e.g. normalizing data inputs) before the validation occurs. The method should return a boolean value indicating
+whether the validation should proceed or not.</li>
+<li><a href="yii-base-model.html#afterValidate()-detail">yii\base\Model::afterValidate()</a>: the default implementation will trigger a <a href="yii-base-model.html#EVENT_AFTER_VALIDATE-detail">yii\base\Model::EVENT_AFTER_VALIDATE</a>
+event. You may either override this method or respond to this event to do some postprocessing work after
+the validation is completed.</li>
+</ul>
+<h3>Conditional Validation  <span id="conditional-validation"></span><a href="#conditional-validation" class="hashlink">&para;</a></h3><p>To validate attributes only when certain conditions apply, e.g. the validation of one attribute depends
+on the value of another attribute you can use the <a href="yii-validators-validator.html#$when-detail">when</a> property
+to define such conditions. For example,</p>
+<pre><code class="hljs php language-php">    [<span class="hljs-string">'state'</span>, <span class="hljs-string">'required'</span>, <span class="hljs-string">'when'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(<span class="hljs-variable">$model</span>)</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$model</span>-&gt;country == <span class="hljs-string">'USA'</span>;
+    }]
+</code></pre>
+<p>The <a href="yii-validators-validator.html#$when-detail">when</a> property takes a PHP callable with the following signature:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> Model $model the model being validated
+ * <span class="hljs-doctag">@param</span> string $attribute the attribute being validated
+ * <span class="hljs-doctag">@return</span> boolean whether the rule should be applied
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>)</span>
+</span></code></pre>
+<p>If you also need to support client-side conditional validation, you should configure
+the <a href="yii-validators-validator.html#$whenClient-detail">whenClient</a> property which takes a string representing a JavaScript
+function whose return value determines whether to apply the rule or not. For example,</p>
+<pre><code class="hljs php language-php">    [<span class="hljs-string">'state'</span>, <span class="hljs-string">'required'</span>, <span class="hljs-string">'when'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$model</span>)</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-variable">$model</span>-&gt;country == <span class="hljs-string">'USA'</span>;
+    }, <span class="hljs-string">'whenClient'</span> =&gt; <span class="hljs-string">"function (attribute, value) {
+        return $('#country').val() == 'USA';
+    }"</span>]
+</code></pre>
+<h3>Data Filtering  <span id="data-filtering"></span><a href="#data-filtering" class="hashlink">&para;</a></h3><p>User inputs often need to be filtered or preprocessed. For example, you may want to trim the spaces around the
+<code>username</code> input. You may use validation rules to achieve this goal.</p>
+<p>The following examples shows how to trim the spaces in the inputs and turn empty inputs into nulls by using
+the <a href="guide-tutorial-core-validators.html#trim">trim</a> and <a href="tutorial-core-validators.html#default">default</a> core validators:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    [[<span class="hljs-string">'username'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'trim'</span>],
+    [[<span class="hljs-string">'username'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'default'</span>],
+];
+</code></pre>
+<p>You may also use the more general <a href="guide-tutorial-core-validators.html#filter">filter</a> validator to perform more complex
+data filtering.</p>
+<p>As you can see, these validation rules do not really validate the inputs. Instead, they will process the values
+and save them back to the attributes being validated.</p>
+<h3>Handling Empty Inputs  <span id="handling-empty-inputs"></span><a href="#handling-empty-inputs" class="hashlink">&para;</a></h3><p>When input data are submitted from HTML forms, you often need to assign some default values to the inputs
+if they are empty. You can do so by using the <a href="guide-tutorial-core-validators.html#default">default</a> validator. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">return</span> [
+    <span class="hljs-comment">// set "username" and "email" as null if they are empty</span>
+    [[<span class="hljs-string">'username'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'default'</span>],
+
+    <span class="hljs-comment">// set "level" to be 1 if it is empty</span>
+    [<span class="hljs-string">'level'</span>, <span class="hljs-string">'default'</span>, <span class="hljs-string">'value'</span> =&gt; <span class="hljs-number">1</span>],
+];
+</code></pre>
+<p>By default, an input is considered empty if its value is an empty string, an empty array or a <code>null</code>.
+You may customize the default empty detection logic by configuring the <a href="yii-validators-validator.html#isEmpty()-detail">yii\validators\Validator::isEmpty()</a> property
+with a PHP callable. For example,</p>
+<pre><code class="hljs php language-php">    [<span class="hljs-string">'agree'</span>, <span class="hljs-string">'required'</span>, <span class="hljs-string">'isEmpty'</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$value</span>)</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">empty</span>(<span class="hljs-variable">$value</span>);
+    }]
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>Most validators do not handle empty inputs if their <a href="yii-validators-validator.html#$skipOnEmpty-detail">yii\validators\Validator::$skipOnEmpty</a> property takes
+  the default value <code>true</code>. They will simply be skipped during validation if their associated attributes receive empty
+  inputs. Among the <a href="guide-tutorial-core-validators.html">core validators</a>, only the <code>captcha</code>, <code>default</code>, <code>filter</code>,
+  <code>required</code>, and <code>trim</code> validators will handle empty inputs.</p>
+</blockquote>
+<h2>Ad Hoc Validation  <span id="ad-hoc-validation"></span><a href="#ad-hoc-validation" class="hashlink">&para;</a></h2><p>Sometimes you need to do <em>ad hoc validation</em> for values that are not bound to any model.</p>
+<p>If you only need to perform one type of validation (e.g. validating email addresses), you may call
+the <a href="yii-validators-validator.html#validate()-detail">validate()</a> method of the desired validator, like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$email</span> = <span class="hljs-string">'test@example.com'</span>;
+<span class="hljs-variable">$validator</span> = <span class="hljs-keyword">new</span> yii\validators\EmailValidator();
+
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$validator</span>-&gt;validate(<span class="hljs-variable">$email</span>, <span class="hljs-variable">$error</span>)) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">'Email is valid.'</span>;
+} <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">echo</span> <span class="hljs-variable">$error</span>;
+}
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>Not all validators support this type of validation. An example is the <a href="guide-tutorial-core-validators.html#unique">unique</a>
+  core validator which is designed to work with a model only.</p>
+</blockquote>
+<p>If you need to perform multiple validations against several values, you can use <a href="yii-base-dynamicmodel.html">yii\base\DynamicModel</a>
+which supports declaring both attributes and rules on the fly. Its usage is like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionSearch</span><span class="hljs-params">(<span class="hljs-variable">$name</span>, <span class="hljs-variable">$email</span>)</span>
+</span>{
+    <span class="hljs-variable">$model</span> = DynamicModel::validateData(compact(<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>), [
+        [[<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'string'</span>, <span class="hljs-string">'max'</span> =&gt; <span class="hljs-number">128</span>],
+        [<span class="hljs-string">'email'</span>, <span class="hljs-string">'email'</span>],
+    ]);
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$model</span>-&gt;hasErrors()) {
+        <span class="hljs-comment">// validation fails</span>
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-comment">// validation succeeds</span>
+    }
+}
+</code></pre>
+<p>The <a href="yii-base-dynamicmodel.html#validateData()-detail">yii\base\DynamicModel::validateData()</a> method creates an instance of <code>DynamicModel</code>, defines the attributes
+using the given data (<code>name</code> and <code>email</code> in this example), and then calls <a href="yii-base-model.html#validate()-detail">yii\base\Model::validate()</a>
+with the given rules.</p>
+<p>Alternatively, you may use the following more "classic" syntax to perform ad hoc data validation:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">actionSearch</span><span class="hljs-params">(<span class="hljs-variable">$name</span>, <span class="hljs-variable">$email</span>)</span>
+</span>{
+    <span class="hljs-variable">$model</span> = <span class="hljs-keyword">new</span> DynamicModel(compact(<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>));
+    <span class="hljs-variable">$model</span>-&gt;addRule([<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'string'</span>, [<span class="hljs-string">'max'</span> =&gt; <span class="hljs-number">128</span>])
+        -&gt;addRule(<span class="hljs-string">'email'</span>, <span class="hljs-string">'email'</span>)
+        -&gt;validate();
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable">$model</span>-&gt;hasErrors()) {
+        <span class="hljs-comment">// validation fails</span>
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-comment">// validation succeeds</span>
+    }
+}
+</code></pre>
+<p>After validation, you can check if the validation succeeded or not by calling the
+<a href="yii-base-model.html#hasErrors()-detail">hasErrors()</a> method, and then get the validation errors from the
+<a href="yii-base-model.html#$errors-detail">errors</a> property, like you do with a normal model.
+You may also access the dynamic attributes defined through the model instance, e.g.,
+<code>$model-&gt;name</code> and <code>$model-&gt;email</code>.</p>
+<h2>Creating Validators  <span id="creating-validators"></span><a href="#creating-validators" class="hashlink">&para;</a></h2><p>Besides using the <a href="guide-tutorial-core-validators.html">core validators</a> included in the Yii releases, you may also
+create your own validators. You may create inline validators or standalone validators.</p>
+<h3>Inline Validators  <span id="inline-validators"></span><a href="#inline-validators" class="hashlink">&para;</a></h3><p>An inline validator is one defined in terms of a model method or an anonymous function. The signature of
+the method/function is:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> string $attribute the attribute currently being validated
+ * <span class="hljs-doctag">@param</span> mixed $params the value of the "params" given in the rule
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$params</span>)</span>
+</span></code></pre>
+<p>If an attribute fails the validation, the method/function should call <a href="yii-base-model.html#addError()-detail">yii\base\Model::addError()</a> to save
+the error message in the model so that it can be retrieved back later to present to end users.</p>
+<p>Below are some examples:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyForm</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Model</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$country</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$token</span>;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [
+            <span class="hljs-comment">// an inline validator defined as the model method validateCountry()</span>
+            [<span class="hljs-string">'country'</span>, <span class="hljs-string">'validateCountry'</span>],
+
+            <span class="hljs-comment">// an inline validator defined as an anonymous function</span>
+            [<span class="hljs-string">'token'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(<span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$params</span>)</span> </span>{
+                <span class="hljs-keyword">if</span> (!ctype_alnum(<span class="hljs-variable">$this</span>-&gt;<span class="hljs-variable">$attribute</span>)) {
+                    <span class="hljs-variable">$this</span>-&gt;addError(<span class="hljs-variable">$attribute</span>, <span class="hljs-string">'The token must contain letters or digits.'</span>);
+                }
+            }],
+        ];
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">validateCountry</span><span class="hljs-params">(<span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$params</span>)</span>
+    </span>{
+        <span class="hljs-keyword">if</span> (!in_array(<span class="hljs-variable">$this</span>-&gt;<span class="hljs-variable">$attribute</span>, [<span class="hljs-string">'USA'</span>, <span class="hljs-string">'Web'</span>])) {
+            <span class="hljs-variable">$this</span>-&gt;addError(<span class="hljs-variable">$attribute</span>, <span class="hljs-string">'The country must be either "USA" or "Web".'</span>);
+        }
+    }
+}
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>By default, inline validators will not be applied if their associated attributes receive empty inputs
+  or if they have already failed some validation rules. If you want to make sure a rule is always applied,
+  you may configure the <a href="yii-validators-validator.html#$skipOnEmpty-detail">skipOnEmpty</a> and/or <a href="yii-validators-validator.html#$skipOnError-detail">skipOnError</a>
+  properties to be <code>false</code> in the rule declarations. For example:</p>
+<pre><code class="hljs php language-php">[
+    [<span class="hljs-string">'country'</span>, <span class="hljs-string">'validateCountry'</span>, <span class="hljs-string">'skipOnEmpty'</span> =&gt; <span class="hljs-keyword">false</span>, <span class="hljs-string">'skipOnError'</span> =&gt; <span class="hljs-keyword">false</span>],
+]
+</code></pre>
+</blockquote>
+<h3>Standalone Validators  <span id="standalone-validators"></span><a href="#standalone-validators" class="hashlink">&para;</a></h3><p>A standalone validator is a class extending <a href="yii-validators-validator.html">yii\validators\Validator</a> or its child class. You may implement
+its validation logic by overriding the <a href="yii-validators-validator.html#validateAttribute()-detail">yii\validators\Validator::validateAttribute()</a> method. If an attribute
+fails the validation, call <a href="yii-base-model.html#addError()-detail">yii\base\Model::addError()</a> to save the error message in the model, like you do
+with <a href="#inline-validators">inline validators</a>.</p>
+<p>For example the inline validator above could be moved into new [[components/validators/CountryValidator]] class.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">components</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">validators</span>\<span class="hljs-title">Validator</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CountryValidator</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Validator</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">validateAttribute</span><span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>)</span>
+    </span>{
+        <span class="hljs-keyword">if</span> (!in_array(<span class="hljs-variable">$model</span>-&gt;<span class="hljs-variable">$attribute</span>, [<span class="hljs-string">'USA'</span>, <span class="hljs-string">'Web'</span>])) {
+            <span class="hljs-variable">$this</span>-&gt;addError(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>, <span class="hljs-string">'The country must be either "USA" or "Web".'</span>);
+        }
+    }
+}
+</code></pre>
+<p>If you want your validator to support validating a value without a model, you should also override
+<a href="yii-validators-validator.html#validate()-detail">yii\validators\Validator::validate()</a>. You may also override <a href="yii-validators-validator.html#validateValue()-detail">yii\validators\Validator::validateValue()</a>
+instead of <code>validateAttribute()</code> and <code>validate()</code> because by default the latter two methods are implemented
+by calling <code>validateValue()</code>.</p>
+<p>Below is an example of how you could use the above validator class within your model.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">Yii</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">components</span>\<span class="hljs-title">validators</span>\<span class="hljs-title">CountryValidator</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EntryForm</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Model</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$name</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$email</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$country</span>;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [
+            [[<span class="hljs-string">'name'</span>, <span class="hljs-string">'email'</span>], <span class="hljs-string">'required'</span>],
+            [<span class="hljs-string">'country'</span>, CountryValidator::className()],
+            [<span class="hljs-string">'email'</span>, <span class="hljs-string">'email'</span>],
+        ];
+    }
+}
+</code></pre>
+<h2>Client-Side Validation  <span id="client-side-validation"></span><a href="#client-side-validation" class="hashlink">&para;</a></h2><p>Client-side validation based on JavaScript is desirable when end users provide inputs via HTML forms, because
+it allows users to find out input errors faster and thus provides a better user experience. You may use or implement
+a validator that supports client-side validation <em>in addition to</em> server-side validation.</p>
+<blockquote class="info"><p><strong>Info: </strong>While client-side validation is desirable, it is not a must. Its main purpose is to provide users with a better
+  experience. Similar to input data coming from end users, you should never trust client-side validation. For this reason,
+  you should always perform server-side validation by calling <a href="yii-base-model.html#validate()-detail">yii\base\Model::validate()</a>, as
+  described in the previous subsections.</p>
+</blockquote>
+<h3>Using Client-Side Validation  <span id="using-client-side-validation"></span><a href="#using-client-side-validation" class="hashlink">&para;</a></h3><p>Many <a href="guide-tutorial-core-validators.html">core validators</a> support client-side validation out-of-the-box. All you need to do
+is just use <a href="yii-widgets-activeform.html">yii\widgets\ActiveForm</a> to build your HTML forms. For example, <code>LoginForm</code> below declares two
+rules: one uses the <a href="guide-tutorial-core-validators.html#required">required</a> core validator which is supported on both
+client and server-sides; the other uses the <code>validatePassword</code> inline validator which is only supported on the server
+side.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">User</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginForm</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Model</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$username</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$password</span>;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [
+            <span class="hljs-comment">// username and password are both required</span>
+            [[<span class="hljs-string">'username'</span>, <span class="hljs-string">'password'</span>], <span class="hljs-string">'required'</span>],
+
+            <span class="hljs-comment">// password is validated by validatePassword()</span>
+            [<span class="hljs-string">'password'</span>, <span class="hljs-string">'validatePassword'</span>],
+        ];
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">validatePassword</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-variable">$user</span> = User::findByUsername(<span class="hljs-variable">$this</span>-&gt;username);
+
+        <span class="hljs-keyword">if</span> (!<span class="hljs-variable">$user</span> || !<span class="hljs-variable">$user</span>-&gt;validatePassword(<span class="hljs-variable">$this</span>-&gt;password)) {
+            <span class="hljs-variable">$this</span>-&gt;addError(<span class="hljs-string">'password'</span>, <span class="hljs-string">'Incorrect username or password.'</span>);
+        }
+    }
+}
+</code></pre>
+<p>The HTML form built by the following code contains two input fields <code>username</code> and <code>password</code>.
+If you submit the form without entering anything, you will find the error messages requiring you
+to enter something appear right away without any communication with the server.</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span> <span class="hljs-variable">$form</span> = yii\widgets\ActiveForm::begin(); <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'username'</span>) <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'password'</span>)-&gt;passwordInput() <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= Html::submitButton(<span class="hljs-string">'Login'</span>) <span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-preprocessor">&lt;?php</span> yii\widgets\ActiveForm::end(); <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<p>Behind the scene, <a href="yii-widgets-activeform.html">yii\widgets\ActiveForm</a> will read the validation rules declared in the model
+and generate appropriate JavaScript code for validators that support client-side validation. When a user
+changes the value of an input field or submit the form, the client-side validation JavaScript will be triggered.</p>
+<p>If you want to turn off client-side validation completely, you may configure the
+<a href="yii-widgets-activeform.html#$enableClientValidation-detail">yii\widgets\ActiveForm::$enableClientValidation</a> property to be <code>false</code>. You may also turn off client-side
+validation of individual input fields by configuring their <a href="yii-widgets-activefield.html#$enableClientValidation-detail">yii\widgets\ActiveField::$enableClientValidation</a>
+property to be false. When <code>enableClientValidation</code> is configured at both the input field level and the form level,
+the former will take precedence.</p>
+<h3>Implementing Client-Side Validation  <span id="implementing-client-side-validation"></span><a href="#implementing-client-side-validation" class="hashlink">&para;</a></h3><p>To create a validator that supports client-side validation, you should implement the
+<a href="yii-validators-validator.html#clientValidateAttribute()-detail">yii\validators\Validator::clientValidateAttribute()</a> method which returns a piece of JavaScript code
+that performs the validation on the client-side. Within the JavaScript code, you may use the following
+predefined variables:</p>
+<ul>
+<li><code>attribute</code>: the name of the attribute being validated.</li>
+<li><code>value</code>: the value being validated.</li>
+<li><code>messages</code>: an array used to hold the validation error messages for the attribute.</li>
+<li><code>deferred</code>: an array which deferred objects can be pushed into (explained in the next subsection).</li>
+</ul>
+<p>In the following example, we create a <code>StatusValidator</code> which validates if an input is a valid status input
+against the existing status data. The validator supports both server-side and client-side validation.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">namespace</span> <span class="hljs-title">app</span>\<span class="hljs-title">components</span>;
+
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">validators</span>\<span class="hljs-title">Validator</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">Status</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StatusValidator</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Validator</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">init</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">parent</span>::init();
+        <span class="hljs-variable">$this</span>-&gt;message = <span class="hljs-string">'Invalid status input.'</span>;
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">validateAttribute</span><span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>)</span>
+    </span>{
+        <span class="hljs-variable">$value</span> = <span class="hljs-variable">$model</span>-&gt;<span class="hljs-variable">$attribute</span>;
+        <span class="hljs-keyword">if</span> (!Status::find()-&gt;where([<span class="hljs-string">'id'</span> =&gt; <span class="hljs-variable">$value</span>])-&gt;exists()) {
+            <span class="hljs-variable">$model</span>-&gt;addError(<span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$this</span>-&gt;message);
+        }
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">clientValidateAttribute</span><span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$view</span>)</span>
+    </span>{
+        <span class="hljs-variable">$statuses</span> = json_encode(Status::find()-&gt;select(<span class="hljs-string">'id'</span>)-&gt;asArray()-&gt;column());
+        <span class="hljs-variable">$message</span> = json_encode(<span class="hljs-variable">$this</span>-&gt;message, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        <span class="hljs-keyword">return</span> <span class="hljs-string">&lt;&lt;&lt;JS
+if ($.inArray(value, <span class="hljs-subst">$statuses</span>) === -1) {
+    messages.push(<span class="hljs-subst">$message</span>);
+}
+JS;</span>
+    }
+}
+</code></pre>
+<blockquote class="tip"><p><strong>Tip: </strong>The above code is given mainly to demonstrate how to support client-side validation. In practice,
+you may use the <a href="guide-tutorial-core-validators.html#in">in</a> core validator to achieve the same goal. You may
+write the validation rule like the following:</p>
+<pre><code class="hljs php language-php">[
+    [<span class="hljs-string">'status'</span>, <span class="hljs-string">'in'</span>, <span class="hljs-string">'range'</span> =&gt; Status::find()-&gt;select(<span class="hljs-string">'id'</span>)-&gt;asArray()-&gt;column()],
+]
+</code></pre>
+</blockquote>
+<blockquote class="tip"><p><strong>Tip: </strong>If you need to work with client validation manually i.e. dynamically add fields or do some custom UI logic, refer
+to <a href="https://github.com/samdark/yii2-cookbook/blob/master/book/forms-activeform-js.md">Working with ActiveForm via JavaScript</a>
+in Yii 2.0 Cookbook.</p>
+</blockquote>
+<h3>Deferred Validation  <span id="deferred-validation"></span><a href="#deferred-validation" class="hashlink">&para;</a></h3><p>If you need to perform asynchronous client-side validation, you can create <a href="http://api.jquery.com/category/deferred-object/">Deferred objects</a>.
+For example, to perform a custom AJAX validation, you can use the following code:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">clientValidateAttribute</span><span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$view</span>)</span>
+</span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&lt;&lt;&lt;JS
+        deferred.push($.get("/check", {value: value}).done(function(data) {
+            if ('' !== data) {
+                messages.push(data);
+            }
+        }));
+JS;</span>
+}
+</code></pre>
+<p>In the above, the <code>deferred</code> variable is provided by Yii, which is an array of Deferred objects. The <code>$.get()</code>
+jQuery method creates a Deferred object which is pushed to the <code>deferred</code> array.</p>
+<p>You can also explicitly create a Deferred object and call its <code>resolve()</code> method when the asynchronous callback
+is hit. The following example shows how to validate the dimensions of an uploaded image file on the client-side.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">clientValidateAttribute</span><span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$view</span>)</span>
+</span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&lt;&lt;&lt;JS
+        var def = $.Deferred();
+        var img = new Image();
+        img.onload = function() {
+            if (this.width &gt; 150) {
+                messages.push('Image too wide!!');
+            }
+            def.resolve();
+        }
+        var reader = new FileReader();
+        reader.onloadend = function() {
+            img.src = reader.result;
+        }
+        reader.readAsDataURL(file);
+
+        deferred.push(def);
+JS;</span>
+}
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>The <code>resolve()</code> method must be called after the attribute has been validated. Otherwise the main form
+  validation will not complete.</p>
+</blockquote>
+<p>For simplicity, the <code>deferred</code> array is equipped with a shortcut method <code>add()</code> which automatically creates a Deferred
+object and adds it to the <code>deferred</code> array. Using this method, you can simplify the above example as follows,</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">clientValidateAttribute</span><span class="hljs-params">(<span class="hljs-variable">$model</span>, <span class="hljs-variable">$attribute</span>, <span class="hljs-variable">$view</span>)</span>
+</span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&lt;&lt;&lt;JS
+        deferred.add(function(def) {
+            var img = new Image();
+            img.onload = function() {
+                if (this.width &gt; 150) {
+                    messages.push('Image too wide!!');
+                }
+                def.resolve();
+            }
+            var reader = new FileReader();
+            reader.onloadend = function() {
+                img.src = reader.result;
+            }
+            reader.readAsDataURL(file);
+        });
+JS;</span>
+}
+</code></pre>
+<h3>AJAX Validation  <span id="ajax-validation"></span><a href="#ajax-validation" class="hashlink">&para;</a></h3><p>Some validations can only be done on the server-side, because only the server has the necessary information.
+For example, to validate if a username is unique or not, it is necessary to check the user table on the server-side.
+You can use AJAX-based validation in this case. It will trigger an AJAX request in the background to validate the
+input while keeping the same user experience as the regular client-side validation.</p>
+<p>To enable AJAX validation for a single input field, configure the <a href="yii-widgets-activefield.html#$enableAjaxValidation-detail">enableAjaxValidation</a>
+property of that field to be <code>true</code> and specify a unique form <code>id</code>:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">ActiveForm</span>;
+
+<span class="hljs-variable">$form</span> = ActiveForm::begin([
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'registration-form'</span>,
+]);
+
+<span class="hljs-keyword">echo</span> <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'username'</span>, [<span class="hljs-string">'enableAjaxValidation'</span> =&gt; <span class="hljs-keyword">true</span>]);
+
+<span class="hljs-comment">// ...</span>
+
+ActiveForm::end();
+</code></pre>
+<p>To enable AJAX validation for the whole form, configure <a href="yii-widgets-activeform.html#$enableAjaxValidation-detail">enableAjaxValidation</a>
+to be <code>true</code> at the form level:</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$form</span> = ActiveForm::begin([
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'contact-form'</span>,
+    <span class="hljs-string">'enableAjaxValidation'</span> =&gt; <span class="hljs-keyword">true</span>,
+]);
+</code></pre>
+<blockquote class="note"><p><strong>Note: </strong>When the <code>enableAjaxValidation</code> property is configured at both the input field level and the form level,
+  the former will take precedence.</p>
+</blockquote>
+<p>You also need to prepare the server so that it can handle the AJAX validation requests.
+This can be achieved by a code snippet like the following in the controller actions:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">if</span> (Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;isAjax &amp;&amp; <span class="hljs-variable">$model</span>-&gt;load(Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;post())) {
+    Yii::<span class="hljs-variable">$app</span>-&gt;response-&gt;format = Response::FORMAT_JSON;
+    <span class="hljs-keyword">return</span> ActiveForm::validate(<span class="hljs-variable">$model</span>);
+}
+</code></pre>
+<p>The above code will check whether the current request is an AJAX. If yes, it will respond to
+this request by running the validation and returning the errors in JSON format.</p>
+<blockquote class="info"><p><strong>Info: </strong>You can also use <a href="#deferred-validation">Deferred Validation</a> to perform AJAX validation.
+  However, the AJAX validation feature described here is more systematic and requires less coding effort.</p>
+</blockquote>
+<p>When both <code>enableClientValidation</code> and <code>enableAjaxValidation</code> are set to <code>true</code>, AJAX validation request will be triggered
+only after the successful client validation.</p>
+        

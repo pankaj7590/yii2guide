@@ -1,0 +1,22 @@
+
+        <h1>Overview <span id="overview"></span><a href="#overview" class="hashlink">&para;</a></h1><p>Yii applications are organized according to the <a href="http://wikipedia.org/wiki/Model-view-controller">model-view-controller (MVC)</a>
+architectural pattern. <a href="guide-structure-models.html">Models</a> represent data, business logic and rules; <a href="guide-structure-views.html">views</a>
+are output representation of models; and <a href="guide-structure-controllers.html">controllers</a> take input and convert
+it to commands for <a href="guide-structure-models.html">models</a> and <a href="guide-structure-views.html">views</a>.</p>
+<p>Besides MVC, Yii applications also have the following entities:</p>
+<ul>
+<li><a href="guide-structure-entry-scripts.html">entry scripts</a>: they are PHP scripts that are directly accessible by end users.
+They are responsible for starting a request handling cycle.</li>
+<li><a href="guide-structure-applications.html">applications</a>: they are globally accessible objects that manage application components
+and coordinate them to fulfill requests.</li>
+<li><a href="guide-structure-application-components.html">application components</a>: they are objects registered with applications and
+provide various services for fulfilling requests.</li>
+<li><a href="guide-structure-modules.html">modules</a>: they are self-contained packages that contain complete MVC by themselves.
+An application can be organized in terms of multiple modules.</li>
+<li><a href="guide-structure-filters.html">filters</a>: they represent code that need to be invoked before and after the actual
+handling of each request by controllers.</li>
+<li><a href="guide-structure-widgets.html">widgets</a>: they are objects that can be embedded in <a href="guide-structure-views.html">views</a>. They
+may contain controller logic and can be reused in different views.</li>
+</ul>
+<p>The following diagram shows the static structure of an application:</p>
+<p><img src="images/application-structure.png" alt="Static Structure of Application" /></p>

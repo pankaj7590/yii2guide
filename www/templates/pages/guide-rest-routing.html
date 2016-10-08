@@ -1,0 +1,74 @@
+
+        <h1>Routing <span id="routing"></span><a href="#routing" class="hashlink">&para;</a></h1><p>With resource and controller classes ready, you can access the resources using the URL like
+<code>http://localhost/index.php?r=user/create</code>, similar to what you can do with normal Web applications.</p>
+<p>In practice, you usually want to enable pretty URLs and take advantage of HTTP verbs.
+For example, a request <code>POST /users</code> would mean accessing the <code>user/create</code> action.
+This can be done easily by configuring the <code>urlManager</code> <a href="guide-structure-application-components.html">application component</a>
+in the application configuration like the following:</p>
+<pre><code class="hljs php language-php"><span class="hljs-string">'urlManager'</span> =&gt; [
+    <span class="hljs-string">'enablePrettyUrl'</span> =&gt; <span class="hljs-keyword">true</span>,
+    <span class="hljs-string">'enableStrictParsing'</span> =&gt; <span class="hljs-keyword">true</span>,
+    <span class="hljs-string">'showScriptName'</span> =&gt; <span class="hljs-keyword">false</span>,
+    <span class="hljs-string">'rules'</span> =&gt; [
+        [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\rest\UrlRule'</span>, <span class="hljs-string">'controller'</span> =&gt; <span class="hljs-string">'user'</span>],
+    ],
+]
+</code></pre>
+<p>Compared to the URL management for Web applications, the main new thing above is the use of
+<a href="yii-rest-urlrule.html">yii\rest\UrlRule</a> for routing RESTful API requests. This special URL rule class will
+create a whole set of child URL rules to support routing and URL creation for the specified controller(s).
+For example, the above code is roughly equivalent to the following rules:</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'PUT,PATCH users/&lt;id&gt;'</span> =&gt; <span class="hljs-string">'user/update'</span>,
+    <span class="hljs-string">'DELETE users/&lt;id&gt;'</span> =&gt; <span class="hljs-string">'user/delete'</span>,
+    <span class="hljs-string">'GET,HEAD users/&lt;id&gt;'</span> =&gt; <span class="hljs-string">'user/view'</span>,
+    <span class="hljs-string">'POST users'</span> =&gt; <span class="hljs-string">'user/create'</span>,
+    <span class="hljs-string">'GET,HEAD users'</span> =&gt; <span class="hljs-string">'user/index'</span>,
+    <span class="hljs-string">'users/&lt;id&gt;'</span> =&gt; <span class="hljs-string">'user/options'</span>,
+    <span class="hljs-string">'users'</span> =&gt; <span class="hljs-string">'user/options'</span>,
+]
+</code></pre>
+<p>And the following API endpoints are supported by this rule:</p>
+<ul>
+<li><code>GET /users</code>: list all users page by page;</li>
+<li><code>HEAD /users</code>: show the overview information of user listing;</li>
+<li><code>POST /users</code>: create a new user;</li>
+<li><code>GET /users/123</code>: return the details of the user 123;</li>
+<li><code>HEAD /users/123</code>: show the overview information of user 123;</li>
+<li><code>PATCH /users/123</code> and <code>PUT /users/123</code>: update the user 123;</li>
+<li><code>DELETE /users/123</code>: delete the user 123;</li>
+<li><code>OPTIONS /users</code>: show the supported verbs regarding endpoint <code>/users</code>;</li>
+<li><code>OPTIONS /users/123</code>: show the supported verbs regarding endpoint <code>/users/123</code>.</li>
+</ul>
+<p>You may configure the <code>only</code> and <code>except</code> options to explicitly list which actions to support or which
+actions should be disabled, respectively. For example,</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\rest\UrlRule'</span>,
+    <span class="hljs-string">'controller'</span> =&gt; <span class="hljs-string">'user'</span>,
+    <span class="hljs-string">'except'</span> =&gt; [<span class="hljs-string">'delete'</span>, <span class="hljs-string">'create'</span>, <span class="hljs-string">'update'</span>],
+],
+</code></pre>
+<p>You may also configure <code>patterns</code> or <code>extraPatterns</code> to redefine existing patterns or add new patterns supported by this rule.
+For example, to support a new action <code>search</code> by the endpoint <code>GET /users/search</code>, configure the <code>extraPatterns</code> option as follows,</p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\rest\UrlRule'</span>,
+    <span class="hljs-string">'controller'</span> =&gt; <span class="hljs-string">'user'</span>,
+    <span class="hljs-string">'extraPatterns'</span> =&gt; [
+        <span class="hljs-string">'GET search'</span> =&gt; <span class="hljs-string">'search'</span>,
+    ],
+]
+</code></pre>
+<p>You may have noticed that the controller ID <code>user</code> appears in plural form as <code>users</code> in the endpoint URLs.
+This is because <a href="yii-rest-urlrule.html">yii\rest\UrlRule</a> automatically pluralizes controller IDs when creating child URL rules.
+You may disable this behavior by setting <a href="yii-rest-urlrule.html#$pluralize-detail">yii\rest\UrlRule::$pluralize</a> to be <code>false</code>. </p>
+<blockquote class="info"><p><strong>Info: </strong>The pluralization of controller IDs is done by <a href="yii-helpers-baseinflector.html#pluralize()-detail">yii\helpers\Inflector::pluralize()</a>. The method respects
+  special pluralization rules. For example, the word <code>box</code> will be pluralized as <code>boxes</code> instead of <code>boxs</code>.</p>
+</blockquote>
+<p>In case when the automatic pluralization does not meet your requirement, you may also configure the 
+<a href="yii-rest-urlrule.html#$controller-detail">yii\rest\UrlRule::$controller</a> property to explicitly specify how to map a name used in endpoint URLs to 
+a controller ID. For example, the following code maps the name <code>u</code> to the controller ID <code>user</code>.  </p>
+<pre><code class="hljs php language-php">[
+    <span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'yii\rest\UrlRule'</span>,
+    <span class="hljs-string">'controller'</span> =&gt; [<span class="hljs-string">'u'</span> =&gt; <span class="hljs-string">'user'</span>],
+]
+</code></pre>

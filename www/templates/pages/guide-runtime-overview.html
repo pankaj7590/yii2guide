@@ -1,0 +1,20 @@
+
+        <h1>Overview <span id="overview"></span><a href="#overview" class="hashlink">&para;</a></h1><p>Each time when a Yii application handles a request, it undergoes a similar workflow.</p>
+<ol>
+<li>A user makes a request to the <a href="guide-structure-entry-scripts.html">entry script</a> <code>web/index.php</code>.</li>
+<li>The entry script loads the application <a href="guide-concept-configurations.html">configuration</a> and creates
+an <a href="guide-structure-applications.html">application</a> instance to handle the request.</li>
+<li>The application resolves the requested <a href="guide-runtime-routing.html">route</a> with the help of
+the <a href="guide-runtime-requests.html">request</a> application component.</li>
+<li>The application creates a <a href="guide-structure-controllers.html">controller</a> instance to handle the request.</li>
+<li>The controller creates an <a href="guide-structure-controllers.html">action</a> instance and performs the filters for the action.</li>
+<li>If any <a href="guide-structure-filters.html">filter</a> fails, the action is cancelled.</li>
+<li>If all filters pass, the action is executed.</li>
+<li>The action loads a data <a href="guide-structure-models.html">model</a>, possibly from a database.</li>
+<li>The action renders a <a href="guide-structure-views.html">view</a>, providing it with the data model.</li>
+<li>The rendered result is returned to the <a href="guide-runtime-responses.html">response</a> application component.</li>
+<li>The response component sends the rendered result to the user's browser.</li>
+</ol>
+<p>The following diagram shows how an application handles a request.</p>
+<p><img src="images/request-lifecycle.png" alt="Request Lifecycle" /></p>
+<p>In this section, we will describe in detail how some of these steps work.</p>

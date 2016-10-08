@@ -1,0 +1,103 @@
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-installation" class="anchor" href="#installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h1>
+
+<h2><a id="user-content-requirements" class="anchor" href="#requirements" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Requirements</h2>
+
+<p>At least redis version 2.6.12 is required for all components to work properly.</p>
+
+<h2><a id="user-content-getting-composer-package" class="anchor" href="#getting-composer-package" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Getting Composer package</h2>
+
+<p>The preferred way to install this extension is through <a href="http://getcomposer.org/download/">composer</a>.</p>
+
+<p>Either run</p>
+
+<pre><code>php composer.phar require --prefer-dist yiisoft/yii2-redis
+</code></pre>
+
+<p>or add</p>
+
+<div class="highlight highlight-source-json"><pre><span class="pl-s"><span class="pl-pds">"</span>yiisoft/yii2-redis<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>~2.0.0<span class="pl-pds">"</span></span></pre></div>
+
+<p>to the require section of your composer.json.</p>
+
+<h2><a id="user-content-configuring-application" class="anchor" href="#configuring-application" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuring application</h2>
+
+<p>To use this extension, you have to configure the Connection class in your application configuration:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">return</span> [</span>
+<span class="pl-s1">    <span class="pl-c">//....</span></span>
+<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>components<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>redis<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> [</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>class<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>yii\redis\Connection<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>hostname<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>localhost<span class="pl-pds">'</span></span>,</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>port<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">6379</span>,</span>
+<span class="pl-s1">            <span class="pl-s"><span class="pl-pds">'</span>database<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">0</span>,</span>
+<span class="pl-s1">        ],</span>
+<span class="pl-s1">    ]</span>
+<span class="pl-s1">];</span></pre></div>
+</article>
+
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-using-the-activerecord" class="anchor" href="#using-the-activerecord" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Using the ActiveRecord</h1>
+
+<p>For general information on how to use yii's ActiveRecord please refer to the <a href="https://github.com/yiisoft/yii2/blob/master/docs/guide/active-record.md">guide</a>.</p>
+
+<p>For defining a redis ActiveRecord class your record class needs to extend from [[yii\redis\ActiveRecord]] and
+implement at least the <code>attributes()</code> method to define the attributes of the record.
+A primary key can be defined via [[yii\redis\ActiveRecord::primaryKey()]] which defaults to <code>id</code> if not specified.
+The primaryKey needs to be part of the attributes so make sure you have an <code>id</code> attribute defined if you do
+not specify your own primary key.</p>
+
+<p>The following is an example model called <code>Customer</code>:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">Customer</span> <span class="pl-k">extends</span> <span class="pl-c1">\yii\redis\</span><span class="pl-e">ActiveRecord</span></span>
+<span class="pl-s1">{</span>
+<span class="pl-s1">    <span class="pl-c">/**</span></span>
+<span class="pl-s1"><span class="pl-c">     * <span class="pl-k">@return</span> array the list of attributes for this record</span></span>
+<span class="pl-s1"><span class="pl-c">     */</span></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">attributes</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-k">return</span> [<span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>address<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>registration_date<span class="pl-pds">'</span></span>];</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-c">/**</span></span>
+<span class="pl-s1"><span class="pl-c">     * <span class="pl-k">@return</span> ActiveQuery defines a relation to the Order record (can be in other database, e.g. elasticsearch or sql)</span></span>
+<span class="pl-s1"><span class="pl-c">     */</span></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">getOrders</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-k">return</span> <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span>hasMany(<span class="pl-c1">Order</span><span class="pl-k">::</span>className(), [<span class="pl-s"><span class="pl-pds">'</span>customer_id<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>]);</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-c">/**</span></span>
+<span class="pl-s1"><span class="pl-c">     * Defines a scope that modifies the `$query` to return only active(status = 1) customers</span></span>
+<span class="pl-s1"><span class="pl-c">     */</span></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-k">function</span> <span class="pl-en">active</span>(<span class="pl-smi">$query</span>)</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-smi">$query</span><span class="pl-k">-&gt;</span>andWhere([<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">1</span>]);</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1">}</span></pre></div>
+
+<p>The general usage of redis ActiveRecord is very similar to the database ActiveRecord as described in the
+<a href="https://github.com/yiisoft/yii2/blob/master/docs/guide/active-record.md">guide</a>.
+It supports the same interface and features except the following limitations:</p>
+
+<ul>
+<li>As redis does not support SQL the query API is limited to the following methods:
+<code>where()</code>, <code>limit()</code>, <code>offset()</code>, <code>orderBy()</code> and <code>indexBy()</code>.
+(orderBy() is not yet implemented: <a href="https://github.com/yiisoft/yii2/issues/1305">#1305</a>)</li>
+<li><code>via</code>-relations can not be defined via a table as there are not tables in redis. You can only define relations via other records.</li>
+</ul>
+
+<p>It is also possible to define relations from redis ActiveRecords to normal ActiveRecord classes and vice versa.</p>
+
+<p>Usage example:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$customer</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Customer</span>();</span>
+<span class="pl-s1"><span class="pl-smi">$customer</span><span class="pl-k">-&gt;</span><span class="pl-smi">attributes</span> <span class="pl-k">=</span> [<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>test<span class="pl-pds">'</span></span>];</span>
+<span class="pl-s1"><span class="pl-smi">$customer</span><span class="pl-k">-&gt;</span>save();</span>
+<span class="pl-s1"><span class="pl-c1">echo</span> <span class="pl-smi">$customer</span><span class="pl-k">-&gt;</span><span class="pl-smi">id</span>; <span class="pl-c">// id will automatically be incremented if not set explicitly</span></span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$customer</span> <span class="pl-k">=</span> <span class="pl-c1">Customer</span><span class="pl-k">::</span>find()<span class="pl-k">-&gt;</span>where([<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-s"><span class="pl-pds">'</span>test<span class="pl-pds">'</span></span>])<span class="pl-k">-&gt;</span>one(); <span class="pl-c">// find by query</span></span>
+<span class="pl-s1"><span class="pl-smi">$customer</span> <span class="pl-k">=</span> <span class="pl-c1">Customer</span><span class="pl-k">::</span>find()<span class="pl-k">-&gt;</span>active()<span class="pl-k">-&gt;</span>all(); <span class="pl-c">// find all by query (using the `active` scope)</span></span></pre></div>
+</article>
+
+
+<a href="https://github.com/yiisoft/yii2-redis/blob/master/docs/guide/README.md">For more information</a>

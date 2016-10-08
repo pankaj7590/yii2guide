@@ -1,0 +1,112 @@
+
+        <h1>Requests <span id="requests"></span><a href="#requests" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#request-parameters">Request Parameters</a></li>
+<li><a href="#request-methods">Request Methods</a></li>
+<li><a href="#request-urls">Request URLs</a></li>
+<li><a href="#http-headers">HTTP Headers</a></li>
+<li><a href="#client-information">Client Information</a></li></ol></div>
+<p>Requests made to an application are represented in terms of <a href="yii-web-request.html">yii\web\Request</a> objects which provide information
+such as request parameters, HTTP headers, cookies, etc. For a given request, you can get access to the corresponding
+request object via the <code>request</code> <a href="guide-structure-application-components.html">application component</a> which is an instance
+of <a href="yii-web-request.html">yii\web\Request</a>, by default. In this section, we will describe how you can make use of this component in your applications.</p>
+<h2>Request Parameters  <span id="request-parameters"></span><a href="#request-parameters" class="hashlink">&para;</a></h2><p>To get request parameters, you can call <a href="yii-web-request.html#get()-detail">get()</a> and <a href="yii-web-request.html#post()-detail">post()</a> methods
+of the <code>request</code> component. They return the values of <code>$_GET</code> and <code>$_POST</code>, respectively. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$request</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request;
+
+<span class="hljs-variable">$get</span> = <span class="hljs-variable">$request</span>-&gt;get();
+<span class="hljs-comment">// equivalent to: $get = $_GET;</span>
+
+<span class="hljs-variable">$id</span> = <span class="hljs-variable">$request</span>-&gt;get(<span class="hljs-string">'id'</span>);
+<span class="hljs-comment">// equivalent to: $id = isset($_GET['id']) ? $_GET['id'] : null;</span>
+
+<span class="hljs-variable">$id</span> = <span class="hljs-variable">$request</span>-&gt;get(<span class="hljs-string">'id'</span>, <span class="hljs-number">1</span>);
+<span class="hljs-comment">// equivalent to: $id = isset($_GET['id']) ? $_GET['id'] : 1;</span>
+
+<span class="hljs-variable">$post</span> = <span class="hljs-variable">$request</span>-&gt;post();
+<span class="hljs-comment">// equivalent to: $post = $_POST;</span>
+
+<span class="hljs-variable">$name</span> = <span class="hljs-variable">$request</span>-&gt;post(<span class="hljs-string">'name'</span>);
+<span class="hljs-comment">// equivalent to: $name = isset($_POST['name']) ? $_POST['name'] : null;</span>
+
+<span class="hljs-variable">$name</span> = <span class="hljs-variable">$request</span>-&gt;post(<span class="hljs-string">'name'</span>, <span class="hljs-string">''</span>);
+<span class="hljs-comment">// equivalent to: $name = isset($_POST['name']) ? $_POST['name'] : '';</span>
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>Instead of directly accessing <code>$_GET</code> and <code>$_POST</code> to retrieve the request parameters, it is recommended
+  that you get them via the <code>request</code> component as shown above. This will make writing tests easier because
+  you can create a mock request component with faked request data.</p>
+</blockquote>
+<p>When implementing <a href="guide-rest-quick-start.html">RESTful APIs</a>, you often need to retrieve parameters that are submitted
+via PUT, PATCH or other <a href="#request-methods">request methods</a>. You can get these parameters by calling
+the <a href="yii-web-request.html#getBodyParam()-detail">yii\web\Request::getBodyParam()</a> methods. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$request</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request;
+
+<span class="hljs-comment">// returns all parameters</span>
+<span class="hljs-variable">$params</span> = <span class="hljs-variable">$request</span>-&gt;bodyParams;
+
+<span class="hljs-comment">// returns the parameter "id"</span>
+<span class="hljs-variable">$param</span> = <span class="hljs-variable">$request</span>-&gt;getBodyParam(<span class="hljs-string">'id'</span>);
+</code></pre>
+<blockquote class="info"><p><strong>Info: </strong>Unlike <code>GET</code> parameters, parameters submitted via <code>POST</code>, <code>PUT</code>, <code>PATCH</code> etc. are sent in the request body.
+  The <code>request</code> component will parse these parameters when you access them through the methods described above.
+  You can customize the way how these parameters are parsed by configuring the <a href="yii-web-request.html#$parsers-detail">yii\web\Request::$parsers</a> property.</p>
+</blockquote>
+<h2>Request Methods  <span id="request-methods"></span><a href="#request-methods" class="hashlink">&para;</a></h2><p>You can get the HTTP method used by the current request via the expression <code>Yii::$app-&gt;request-&gt;method</code>.
+A whole set of boolean properties is also provided for you to check if the current method is of certain type.
+For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$request</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request;
+
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$request</span>-&gt;isAjax) { <span class="hljs-comment">/* the request is an AJAX request */</span> }
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$request</span>-&gt;isGet)  { <span class="hljs-comment">/* the request method is GET */</span> }
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$request</span>-&gt;isPost) { <span class="hljs-comment">/* the request method is POST */</span> }
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$request</span>-&gt;isPut)  { <span class="hljs-comment">/* the request method is PUT */</span> }
+</code></pre>
+<h2>Request URLs  <span id="request-urls"></span><a href="#request-urls" class="hashlink">&para;</a></h2><p>The <code>request</code> component provides many ways of inspecting the currently requested URL. </p>
+<p>Assuming the URL being requested is <code>http://example.com/admin/index.php/product?id=100</code>, you can get various
+parts of this URL as summarized in the following:</p>
+<ul>
+<li><a href="yii-web-request.html#$url-detail">url</a>: returns <code>/admin/index.php/product?id=100</code>, which is the URL without the host info part. </li>
+<li><a href="yii-web-request.html#$absoluteUrl-detail">absoluteUrl</a>: returns <code>http://example.com/admin/index.php/product?id=100</code>,
+which is the whole URL including the host info part.</li>
+<li><a href="yii-web-request.html#$hostInfo-detail">hostInfo</a>: returns <code>http://example.com</code>, which is the host info part of the URL.</li>
+<li><a href="yii-web-request.html#$pathInfo-detail">pathInfo</a>: returns <code>/product</code>, which is the part after the entry script and 
+before the question mark (query string).</li>
+<li><a href="yii-web-request.html#$queryString-detail">queryString</a>: returns <code>id=100</code>, which is the part after the question mark. </li>
+<li><a href="yii-web-request.html#$baseUrl-detail">baseUrl</a>: returns <code>/admin</code>, which is the part after the host info and before
+the entry script name.</li>
+<li><a href="yii-web-request.html#$scriptUrl-detail">scriptUrl</a>: returns <code>/admin/index.php</code>, which is the URL without path info and query string.</li>
+<li><a href="yii-web-request.html#$serverName-detail">serverName</a>: returns <code>example.com</code>, which is the host name in the URL.</li>
+<li><a href="yii-web-request.html#$serverPort-detail">serverPort</a>: returns 80, which is the port used by the Web server.</li>
+</ul>
+<h2>HTTP Headers  <span id="http-headers"></span><a href="#http-headers" class="hashlink">&para;</a></h2><p>You can get the HTTP header information through the <a href="yii-web-headercollection.html">header collection</a> returned 
+by the <a href="yii-web-request.html#$headers-detail">yii\web\Request::$headers</a> property. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// $headers is an object of yii\web\HeaderCollection </span>
+<span class="hljs-variable">$headers</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;headers;
+
+<span class="hljs-comment">// returns the Accept header value</span>
+<span class="hljs-variable">$accept</span> = <span class="hljs-variable">$headers</span>-&gt;get(<span class="hljs-string">'Accept'</span>);
+
+<span class="hljs-keyword">if</span> (<span class="hljs-variable">$headers</span>-&gt;has(<span class="hljs-string">'User-Agent'</span>)) { <span class="hljs-comment">/* there is User-Agent header */</span> }
+</code></pre>
+<p>The <code>request</code> component also provides support for quickly accessing some commonly used headers, including:</p>
+<ul>
+<li><a href="yii-web-request.html#$userAgent-detail">userAgent</a>: returns the value of the <code>User-Agent</code> header.</li>
+<li><a href="yii-web-request.html#$contentType-detail">contentType</a>: returns the value of the <code>Content-Type</code> header which indicates
+the MIME type of the data in the request body.</li>
+<li><a href="yii-web-request.html#$acceptableContentTypes-detail">acceptableContentTypes</a>: returns the content MIME types acceptable by users.
+The returned types are ordered by their quality score. Types with the highest scores will be returned first.</li>
+<li><a href="yii-web-request.html#$acceptableLanguages-detail">acceptableLanguages</a>: returns the languages acceptable by users.
+The returned languages are ordered by their preference level. The first element represents the most preferred language.</li>
+</ul>
+<p>If your application supports multiple languages and you want to display pages in the language that is the most preferred
+by the end user, you may use the language negotiation method <a href="yii-web-request.html#getPreferredLanguage()-detail">yii\web\Request::getPreferredLanguage()</a>.
+This method takes a list of languages supported by your application, compares them with <a href="yii-web-request.html#$acceptableLanguages-detail">acceptableLanguages</a>,
+and returns the most appropriate language.</p>
+<blockquote class="tip"><p><strong>Tip: </strong>You may also use the <a href="yii-filters-contentnegotiator.html">ContentNegotiator</a> filter to dynamically determine 
+  what content type and language should be used in the response. The filter implements the content negotiation
+  on top of the properties and methods described above.</p>
+</blockquote>
+<h2>Client Information  <span id="client-information"></span><a href="#client-information" class="hashlink">&para;</a></h2><p>You can get the host name and IP address of the client machine through <a href="yii-web-request.html#$userHost-detail">userHost</a>
+and <a href="yii-web-request.html#$userIP-detail">userIP</a>, respectively. For example,</p>
+<pre><code class="hljs php language-php"><span class="hljs-variable">$userHost</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;userHost;
+<span class="hljs-variable">$userIP</span> = Yii::<span class="hljs-variable">$app</span>-&gt;request-&gt;userIP;
+</code></pre>

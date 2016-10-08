@@ -1,0 +1,159 @@
+
+        <h1>Creating Forms <span id="creating-forms"></span><a href="#creating-forms" class="hashlink">&para;</a></h1>
+<div class="toc"><ol><li><a href="#creating-activeform-dropdownlist">Creating Drop-down List</a></li>
+<li><a href="#working-with-pjax">Working with Pjax</a></li>
+<li><a href="#further-reading">Further Reading</a></li></ol></div>
+<p>The primary way of using forms in Yii is through <a href="yii-widgets-activeform.html">yii\widgets\ActiveForm</a>. This approach should be preferred when
+the form is based upon a model. Additionally, there are some useful methods in <a href="yii-helpers-html.html">yii\helpers\Html</a> that are typically
+used for adding buttons and help text to any form.</p>
+<p>A form, that is displayed on the client-side, will in most cases have a corresponding <a href="guide-structure-models.html">model</a> which is used
+to validate its input on the server-side (Check the <a href="guide-input-validation.html">Validating Input</a> section for more details on validation).
+When creating model-based forms, the first step is to define the model itself. The model can be either based upon
+an <a href="guide-db-active-record.html">Active Record</a> class, representing some data from the database, or a generic Model class
+(extending from <a href="yii-base-model.html">yii\base\Model</a>) to capture arbitrary input, for example a login form.
+In the following example, we show how a generic model can be used for a login form:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginForm</span> <span class="hljs-keyword">extends</span> \<span class="hljs-title">yii</span>\<span class="hljs-title">base</span>\<span class="hljs-title">Model</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$username</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-variable">$password</span>;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rules</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> [
+            <span class="hljs-comment">// define validation rules here</span>
+        ];
+    }
+}
+</code></pre>
+<p>In the controller, we will pass an instance of that model to the view, wherein the <a href="yii-widgets-activeform.html">ActiveForm</a>
+widget is used to display the form:</p>
+<pre><code class="hljs php language-php"><span class="hljs-preprocessor">&lt;?php</span>
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">helpers</span>\<span class="hljs-title">Html</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">ActiveForm</span>;
+
+<span class="hljs-variable">$form</span> = ActiveForm::begin([
+    <span class="hljs-string">'id'</span> =&gt; <span class="hljs-string">'login-form'</span>,
+    <span class="hljs-string">'options'</span> =&gt; [<span class="hljs-string">'class'</span> =&gt; <span class="hljs-string">'form-horizontal'</span>],
+]) <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'username'</span>) <span class="hljs-preprocessor">?&gt;</span>
+    <span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'password'</span>)-&gt;passwordInput() <span class="hljs-preprocessor">?&gt;</span>
+
+    &lt;div <span class="hljs-class"><span class="hljs-keyword">class</span>="<span class="hljs-title">form</span>-<span class="hljs-title">group</span>"&gt;
+        &lt;<span class="hljs-title">div</span> <span class="hljs-title">class</span>="<span class="hljs-title">col</span>-<span class="hljs-title">lg</span>-<span class="hljs-title">offset</span>-1 <span class="hljs-title">col</span>-<span class="hljs-title">lg</span>-11"&gt;
+            &lt;?= <span class="hljs-title">Html</span>::<span class="hljs-title">submitButton</span>('<span class="hljs-title">Login</span>', ['<span class="hljs-title">class</span>' =&gt; '<span class="hljs-title">btn</span> <span class="hljs-title">btn</span>-<span class="hljs-title">primary</span>']) ?&gt;
+        &lt;/<span class="hljs-title">div</span>&gt;
+    &lt;/<span class="hljs-title">div</span>&gt;
+&lt;?<span class="hljs-title">php</span> <span class="hljs-title">ActiveForm</span>::<span class="hljs-title">end</span>() ?&gt;
+</span></code></pre>
+<p>In the above code, <a href="yii-base-widget.html#begin()-detail">ActiveForm::begin()</a> not only creates a form instance, but also marks the beginning of the form.
+All of the content placed between <a href="yii-base-widget.html#begin()-detail">ActiveForm::begin()</a> and
+<a href="yii-base-widget.html#end()-detail">ActiveForm::end()</a> will be wrapped within the HTML <code>&lt;form&gt;</code> tag.
+As with any widget, you can specify some options as to how the widget should be configured by passing an array to
+the <code>begin</code> method. In this case, an extra CSS class and identifying ID are passed to be used in the opening <code>&lt;form&gt;</code> tag.
+For all available options, please refer to the API documentation of <a href="yii-widgets-activeform.html">yii\widgets\ActiveForm</a>.</p>
+<p>In order to create a form element in the form, along with the element's label, and any applicable JavaScript validation,
+the <a href="yii-widgets-activeform.html#field()-detail">ActiveForm::field()</a> method is called, which returns an instance of <a href="yii-widgets-activefield.html">yii\widgets\ActiveField</a>.
+When the result of this method is echoed directly, the result is a regular (text) input.
+To customize the output, you can chain additional methods of <a href="yii-widgets-activefield.html">ActiveField</a> to this call:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// a password input</span>
+<span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'password'</span>)-&gt;passwordInput() <span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-comment">// adding a hint and a customized label</span>
+<span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'username'</span>)-&gt;textInput()-&gt;hint(<span class="hljs-string">'Please enter your name'</span>)-&gt;label(<span class="hljs-string">'Name'</span>) <span class="hljs-preprocessor">?&gt;</span>
+<span class="hljs-comment">// creating a HTML5 email input element</span>
+<span class="hljs-preprocessor">&lt;?</span>= <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'email'</span>)-&gt;input(<span class="hljs-string">'email'</span>) <span class="hljs-preprocessor">?&gt;</span>
+</code></pre>
+<p>This will create all the <code>&lt;label&gt;</code>, <code>&lt;input&gt;</code> and other tags according to the <a href="yii-widgets-activefield.html#$template-detail">template</a> defined by the form field.
+The name of the input field is determined automatically from the model's <a href="yii-base-model.html#formName()-detail">form name</a> and the attribute name.
+For example, the name for the input field for the <code>username</code> attribute in the above example will be <code>LoginForm[username]</code>. This naming rule will result in an array
+of all attributes for the login form to be available in <code>$_POST['LoginForm']</code> on the server-side.</p>
+<blockquote class="tip"><p><strong>Tip: </strong>If you have only one model in a form and want to simplify the input names you may skip the array part by
+overriding the <a href="yii-base-model.html#formName()-detail">formName()</a> method of the model to return an empty string.
+This can be useful for filter models used in the <a href="guide-output-data-widgets.html#grid-view">GridView</a> to create nicer URLs.</p>
+</blockquote>
+<p>Specifying the attribute of the model can be done in more sophisticated ways. For example when an attribute may
+take an array value when uploading multiple files or selecting multiple items you may specify it by appending <code>[]</code>
+to the attribute name:</p>
+<pre><code class="hljs php language-php"><span class="hljs-comment">// allow multiple files to be uploaded:</span>
+<span class="hljs-keyword">echo</span> <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'uploadFile[]'</span>)-&gt;fileInput([<span class="hljs-string">'multiple'</span>=&gt;<span class="hljs-string">'multiple'</span>]);
+
+<span class="hljs-comment">// allow multiple items to be checked:</span>
+<span class="hljs-keyword">echo</span> <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'items[]'</span>)-&gt;checkboxList([<span class="hljs-string">'a'</span> =&gt; <span class="hljs-string">'Item A'</span>, <span class="hljs-string">'b'</span> =&gt; <span class="hljs-string">'Item B'</span>, <span class="hljs-string">'c'</span> =&gt; <span class="hljs-string">'Item C'</span>]);
+</code></pre>
+<p>Be careful when naming form elements such as submit buttons. According to the <a href="https://api.jquery.com/submit/">jQuery documentation</a> there
+are some reserved names that can cause conflicts:</p>
+<blockquote><p>Forms and their child elements should not use input names or ids that conflict with properties of a form,
+such as <code>submit</code>, <code>length</code>, or <code>method</code>. Name conflicts can cause confusing failures.
+For a complete list of rules and to check your markup for these problems, see <a href="http://kangax.github.io/domlint/">DOMLint</a>.</p>
+</blockquote>
+<p>Additional HTML tags can be added to the form using plain HTML or using the methods from the <a href="yii-helpers-html.html">Html</a>-helper
+class like it is done in the above example with <a href="yii-helpers-basehtml.html#submitButton()-detail">Html::submitButton()</a>.</p>
+<blockquote class="tip"><p><strong>Tip: </strong>If you are using Twitter Bootstrap CSS in your application you may want to use
+<a href="yii-bootstrap-activeform.html">yii\bootstrap\ActiveForm</a> instead of <a href="yii-widgets-activeform.html">yii\widgets\ActiveForm</a>. The former extends from the latter and
+uses Bootstrap-specific styles when generating form input fields.</p>
+</blockquote>
+<blockquote class="tip"><p><strong>Tip: </strong>In order to style required fields with asterisks, you can use the following CSS:</p>
+<pre><code class="hljs css language-css"><span class="hljs-tag">div</span><span class="hljs-class">.required</span> <span class="hljs-rule"><span class="hljs-attribute">label.control-label</span>:<span class="hljs-value">after {
+    content: <span class="hljs-string">" *"</span></span></span>;
+    <span class="hljs-rule"><span class="hljs-attribute">color</span>:<span class="hljs-value"> red</span></span>;
+}
+</code></pre>
+</blockquote>
+<h2>Creating Drop-down List  <span id="creating-activeform-dropdownlist"></span><a href="#creating-activeform-dropdownlist" class="hashlink">&para;</a></h2><p>We can use ActiveForm <a href="yii-widgets-activefield.html#dropDownList()-detail">dropDownList()</a>
+method to create a drop-down list:</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">app</span>\<span class="hljs-title">models</span>\<span class="hljs-title">ProductCategory</span>;
+
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $this yii\web\View */</span>
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $form yii\widgets\ActiveForm */</span>
+<span class="hljs-comment">/* <span class="hljs-doctag">@var</span> $model app\models\Product */</span>
+
+<span class="hljs-keyword">echo</span> <span class="hljs-variable">$form</span>-&gt;field(<span class="hljs-variable">$model</span>, <span class="hljs-string">'product_category'</span>)-&gt;dropdownList(
+    ProductCategory::find()-&gt;select([<span class="hljs-string">'category_name'</span>, <span class="hljs-string">'id'</span>])-&gt;indexBy(<span class="hljs-string">'id'</span>)-&gt;column(),
+    [<span class="hljs-string">'prompt'</span>=&gt;<span class="hljs-string">'Select Category'</span>]
+);
+</code></pre>
+<p>The value of your model field will be automatically pre-selected.</p>
+<h2>Working with Pjax  <span id="working-with-pjax"></span><a href="#working-with-pjax" class="hashlink">&para;</a></h2><p>The <a href="yii-widgets-pjax.html">Pjax</a> widget allows you to update a certain section of a
+page instead of reloading the entire page. You can use it to update only the form
+and replace its contents after the submission.</p>
+<p>You can configure <a href="yii-widgets-pjax.html#$formSelector-detail">$formSelector</a> to specify
+which form submission may trigger pjax. If not set, all forms with <code>data-pjax</code>
+attribute within the enclosed content of Pjax will trigger pjax requests.</p>
+<pre><code class="hljs php language-php"><span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">Pjax</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-title">yii</span>\<span class="hljs-title">widgets</span>\<span class="hljs-title">ActiveForm</span>;
+
+Pjax::begin([
+    <span class="hljs-comment">// Pjax options</span>
+]);
+    <span class="hljs-variable">$form</span> = ActiveForm::begin([
+        <span class="hljs-string">'options'</span> =&gt; [<span class="hljs-string">'data'</span> =&gt; [<span class="hljs-string">'pjax'</span> =&gt; <span class="hljs-keyword">true</span>]],
+        <span class="hljs-comment">// more ActiveForm options</span>
+    ]);
+
+        <span class="hljs-comment">// ActiveForm content</span>
+
+    ActiveForm::end();
+Pjax::end();
+</code></pre>
+<blockquote class="tip"><p><strong>Tip: </strong>Be careful with the links inside the <a href="yii-widgets-pjax.html">Pjax</a> widget since
+the response  will also be rendered inside the widget. To prevent this, use the
+<code>data-pjax="0"</code> HTML attribute.</p>
+</blockquote>
+<h4>Values in Submit Buttons and File Upload <span id="values-in-submit-buttons-and-file-upload"></span><a href="#values-in-submit-buttons-and-file-upload" class="hashlink">&para;</a></h4><p>There are known issues using <code>jQuery.serializeArray()</code> when dealing with
+<a href="https://github.com/jquery/jquery/issues/2321">files</a> and
+<a href="https://github.com/jquery/jquery/issues/2321">submit button values</a> which
+won't be solved and are instead deprecated in favor of the <code>FormData</code> class
+introduced in HTML5.</p>
+<p>That means the only official support for files and submit button values with
+ajax or using the <a href="yii-widgets-pjax.html">Pjax</a> widget depends on the
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData#Browser_compatibility">browser support</a>
+for the <code>FormData</code> class.</p>
+<h2>Further Reading  <span id="further-reading"></span><a href="#further-reading" class="hashlink">&para;</a></h2><p>The next section <a href="guide-input-validation.html">Validating Input</a> handles the validation of the submitted form data on the server-side as well as ajax and client-side validation.</p>
+<p>To read about more complex usage of forms, you may want to check out the following sections:</p>
+<ul>
+<li><a href="guide-input-tabular-input.html">Collecting Tabular Input</a> for collecting data for multiple models of the same kind.</li>
+<li><a href="guide-input-multiple-models.html">Getting Data for Multiple Models</a> for handling multiple different models in the same form.</li>
+<li><a href="guide-input-file-upload.html">Uploading Files</a> on how to use forms for uploading files.</li>
+</ul>
+        
